@@ -305,9 +305,12 @@ class Guild(Hashable):
         self._rules_channel_id = utils._get_as_snowflake(guild, 'rules_channel_id')
         self._public_updates_channel_id = utils._get_as_snowflake(guild, 'public_updates_channel_id')
 
+        cache_members = self._state._cache_members
+        self_id = self._state.self_id
         for mdata in guild.get('members', []):
             member = Member(data=mdata, guild=self, state=state)
-            self._add_member(member)
+            if cache_members or member.id == self_id:
+                self._add_member(member)
 
         self._sync(guild)
         self._large = None if member_count is None else self._member_count >= 250
@@ -2047,6 +2050,32 @@ class Guild(Hashable):
 
         return Widget(state=self._state, data=data)
 
+    async def chunk(self, *, cache=True):
+        """|coro|
+
+        Requests all members that belong to this guild. In order to use this,
+        :meth:`Intents.members` must be enabled.
+
+        This is a websocket operation and can be slow.
+
+        .. versionadded:: 1.5
+
+        Parameters
+        -----------
+        cache: :class:`bool`
+            Whether to cache the members as well.
+
+        Raises
+        -------
+        ClientException
+            The members intent is not enabled.
+        """
+
+        if not self._state._intents.members:
+            raise ClientException('Intents.members must be enabled to use this.')
+
+        return await self._state.chunk_guild(self, cache=cache)
+
     async def query_members(self, query=None, *, limit=5, user_ids=None, cache=True):
         """|coro|
 
@@ -2055,25 +2084,19 @@ class Guild(Hashable):
 
         This is a websocket operation and can be slow.
 
-        .. warning::
-
-            Most bots do not need to use this. It's mainly a helper
-            for bots who have disabled ``guild_subscriptions``.
-
         .. versionadded:: 1.3
 
         Parameters
         -----------
-        query: :class:`str`
-            The string that the username's start with. An empty string
-            requests all members.
+        query: Optional[:class:`str`]
+            The string that the username's start with.
         limit: :class:`int`
             The maximum number of members to send back. This must be
-            a number between 1 and 1000.
+            a number between 5 and 100.
         cache: :class:`bool`
             Whether to cache the members internally. This makes operations
             such as :meth:`get_member` work for those that matched.
-        user_ids: List[:class:`int`]
+        user_ids: Optional[List[:class:`int`]]
             List of user IDs to search for. If the user ID is not in the guild then it won't be returned.
 
             .. versionadded:: 1.4
@@ -2083,19 +2106,26 @@ class Guild(Hashable):
         -------
         asyncio.TimeoutError
             The query timed out waiting for the members.
+        ValueError
+            Invalid parameters were passed to the function
 
         Returns
         --------
         List[:class:`Member`]
             The list of members that have matched the query.
         """
+
+        if query is None:
+            if query == '':
+                raise ValueError('Cannot pass empty query string.')
+
+            if user_ids is None:
+                raise ValueError('Must pass either query or user_ids')
+
         if user_ids is not None and query is not None:
-            raise TypeError('Cannot pass both query and user_ids')
+            raise ValueError('Cannot pass both query and user_ids')
 
-        if user_ids is None and query is None:
-            raise TypeError('Must pass either query or user_ids')
-
-        limit = limit or 5
+        limit = min(100, limit or 5)
         return await self._state.query_members(self, query=query, limit=limit, user_ids=user_ids, cache=cache)
 
     async def change_voice_state(self, *, channel, self_mute=False, self_deaf=False):

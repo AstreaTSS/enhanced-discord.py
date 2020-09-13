@@ -141,6 +141,10 @@ class Client:
         Integer starting at ``0`` and less than :attr:`.shard_count`.
     shard_count: Optional[:class:`int`]
         The total number of shards.
+    intents: :class:`Intents`
+        A list of intents that you want to enable for the session. This is a way of
+        disabling and enabling certain gateway events from triggering and being sent.
+        Currently, if no intents are passed then you will receive all data.
     fetch_offline_members: :class:`bool`
         Indicates if :func:`.on_ready` should be delayed to fetch all offline
         members from the guilds the client belongs to. If this is ``False``\, then
@@ -375,6 +379,7 @@ class Client:
         print('Ignoring exception in {}'.format(event_method), file=sys.stderr)
         traceback.print_exc()
 
+    @utils.deprecated('Guild.chunk')
     async def request_offline_members(self, *guilds):
         r"""|coro|
 
@@ -388,6 +393,10 @@ class Client:
         in the guild is larger than 250. You can check if a guild is large
         if :attr:`.Guild.large` is ``True``.
 
+        .. warning::
+
+            This method is deprecated. Use :meth:`Guild.chunk` instead.
+
         Parameters
         -----------
         \*guilds: :class:`.Guild`
@@ -396,12 +405,13 @@ class Client:
         Raises
         -------
         :exc:`.InvalidArgument`
-            If any guild is unavailable or not large in the collection.
+            If any guild is unavailable in the collection.
         """
-        if any(not g.large or g.unavailable for g in guilds):
-            raise InvalidArgument('An unavailable or non-large guild was passed.')
+        if any(g.unavailable for g in guilds):
+            raise InvalidArgument('An unavailable guild was passed.')
 
-        await self._connection.request_offline_members(guilds)
+        for guild in guilds:
+            await self._connection.chunk_guild(guild)
 
     # hooks
 
