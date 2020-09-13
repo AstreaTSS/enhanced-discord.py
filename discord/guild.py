@@ -580,8 +580,8 @@ class Guild(Hashable):
 
     @property
     def icon_url(self):
-        """:class:`Asset`: Returns the guild's icon asset."""
-        return self.icon_url_as()
+        """:class:`str`: Returns the guild's direct icon url."""
+        return str(self.icon_url_as(static_format="png"))
 
     def is_icon_animated(self):
         """:class:`bool`: Returns True if the guild has an animated icon."""

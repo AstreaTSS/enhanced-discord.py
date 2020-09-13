@@ -139,15 +139,12 @@ class BaseUser(_BaseUser):
 
     @property
     def avatar_url(self):
-        """:class:`Asset`: Returns an :class:`Asset` for the avatar the user has.
+        """:class:`str`: Returns an direct url for the avatar the user has.
 
         If the user does not have a traditional avatar, an asset for
         the default avatar is returned instead.
-
-        This is equivalent to calling :meth:`avatar_url_as` with
-        the default parameters (i.e. webp/gif detection and a size of 1024).
         """
-        return self.avatar_url_as(format=None, size=1024)
+        return str(self.avatar_url_as(static_format="png", size=1024))
 
     def is_avatar_animated(self):
         """Indicates if the user has an animated avatar."""
