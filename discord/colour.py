@@ -85,8 +85,8 @@ class Colour:
     def __int__(self):
         return int(str(self.value), 16)
 
-    def __hex__(self):
-        return hex(self.value)
+    def __index__(self):
+        return self.value
 
     @property
     def r(self):
