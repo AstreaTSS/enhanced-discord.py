@@ -86,7 +86,7 @@ class Colour:
         return int(str(self.value), 16)
 
     def __hex__(self):
-        return self.value
+        return hex(self.value)
 
     @property
     def r(self):
