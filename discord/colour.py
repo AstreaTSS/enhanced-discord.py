@@ -85,6 +85,9 @@ class Colour:
     def __int__(self):
         return int(str(self.value), 16)
 
+    def __hex__(self):
+        return self.value
+
     @property
     def r(self):
         """:class:`int`: Returns the red component of the colour."""
