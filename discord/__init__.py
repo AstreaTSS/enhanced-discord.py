@@ -33,7 +33,7 @@ from .guild import Guild
 from .flags import *
 from .relationship import Relationship
 from .member import Member, VoiceState
-from .message import Message, Attachment
+from .message import Message, MessageReference, Attachment
 from .asset import Asset
 from .errors import *
 from .calls import CallMessage, GroupCall
@@ -54,7 +54,7 @@ from .mentions import AllowedMentions
 from .shard import AutoShardedClient, ShardInfo
 from .player import *
 from .webhook import *
-from .voice_client import VoiceClient
+from .voice_client import VoiceClient, VoiceProtocol
 from .audit_logs import AuditLogChanges, AuditLogEntry, AuditLogDiff
 from .raw_models import *
 from .team import *

@@ -54,6 +54,9 @@ Voice
 .. autoclass:: VoiceClient()
     :members:
 
+.. autoclass:: VoiceProtocol
+    :members:
+
 .. autoclass:: AudioSource
     :members:
 
@@ -984,6 +987,11 @@ of :class:`enum.Enum`.
     .. attribute:: custom
 
         A custom activity type.
+    .. attribute:: competing
+
+        A competing activity type.
+
+        .. versionadded:: 1.5
 
 .. class:: HypeSquadHouse
 
@@ -2729,6 +2737,11 @@ Widget
 ~~~~~~~
 
 .. autoclass:: Widget()
+    :members:
+
+MessageReference
+~~~~~~~~~~~~~~~~~
+.. autoclass:: MessageReference()
     :members:
 
 RawMessageDeleteEvent

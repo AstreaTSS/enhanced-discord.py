@@ -295,20 +295,22 @@ class AutoShardedClient(Client):
             elif not isinstance(self.shard_ids, (list, tuple)):
                 raise ClientException('shard_ids parameter must be a list or a tuple.')
 
-        self._connection = AutoShardedConnectionState(dispatch=self.dispatch,
-                                                      handlers=self._handlers, syncer=self._syncer,
-                                                      hooks=self._hooks, http=self.http, loop=self.loop, **kwargs)
-
         # instead of a single websocket, we have multiple
         # the key is the shard_id
         self.__shards = {}
         self._connection._get_websocket = self._get_websocket
+        self._connection._get_client = lambda: self
         self.__queue = asyncio.PriorityQueue()
 
     def _get_websocket(self, guild_id=None, *, shard_id=None):
         if shard_id is None:
             shard_id = (guild_id >> 22) % self.shard_count
         return self.__shards[shard_id].ws
+
+    def _get_state(self, **options):
+        return AutoShardedConnectionState(dispatch=self.dispatch,
+                                          handlers=self._handlers, syncer=self._syncer,
+                                          hooks=self._hooks, http=self.http, loop=self.loop, **options)
 
     @property
     def latency(self):

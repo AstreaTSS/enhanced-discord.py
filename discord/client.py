@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-from collections import namedtuple
 import logging
 import signal
 import sys
@@ -144,17 +143,24 @@ class Client:
     intents: :class:`Intents`
         The intents that you want to enable for the session. This is a way of
         disabling and enabling certain gateway events from triggering and being sent.
+        If not given, defaults to a regularly constructed :class:`Intents` class.
 
         .. versionadded:: 1.5
     member_cache_flags: :class:`MemberCacheFlags`
         Allows for finer control over how the library caches members.
+        If not given, defaults to cache as much as possible with the
+        currently selected intents.
 
         .. versionadded:: 1.5
     fetch_offline_members: :class:`bool`
-        Indicates if :func:`.on_ready` should be delayed to fetch all offline
-        members from the guilds the client belongs to. If this is ``False``\, then
-        no offline members are received and :meth:`request_offline_members`
-        must be used to fetch the offline members of the guild.
+        A deprecated alias of ``chunk_guilds_at_startup``.
+    chunk_guilds_at_startup: :class:`bool`
+        Indicates if :func:`.on_ready` should be delayed to chunk all guilds
+        at start-up if necessary. This operation is incredibly slow for large
+        amounts of guilds. The default is ``True`` if :attr:`Intents.members`
+        is ``True``.
+
+        .. versionadded:: 1.5
     status: Optional[:class:`.Status`]
         A status to start your presence with upon logging on to Discord.
     activity: Optional[:class:`.BaseActivity`]
@@ -241,13 +247,12 @@ class Client:
             'before_identify': self._call_before_identify_hook
         }
 
-        self._connection = ConnectionState(dispatch=self.dispatch, handlers=self._handlers,
-                                           hooks=self._hooks, syncer=self._syncer, http=self.http, loop=self.loop, **options)
-
+        self._connection = self._get_state(**options)
         self._connection.shard_count = self.shard_count
         self._closed = False
         self._ready = asyncio.Event()
         self._connection._get_websocket = self._get_websocket
+        self._connection._get_client = lambda: self
 
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
@@ -257,6 +262,10 @@ class Client:
 
     def _get_websocket(self, guild_id=None, *, shard_id=None):
         return self.ws
+
+    def _get_state(self, **options):
+        return ConnectionState(dispatch=self.dispatch, handlers=self._handlers,
+                               hooks=self._hooks, syncer=self._syncer, http=self.http, loop=self.loop, **options)
 
     async def _syncer(self, guilds):
         await self.ws.request_sync(guilds)
@@ -309,11 +318,14 @@ class Client:
 
     @property
     def voice_clients(self):
-        """List[:class:`.VoiceClient`]: Represents a list of voice connections."""
+        """List[:class:`.VoiceProtocol`]: Represents a list of voice connections.
+
+        These are usually :class:`.VoiceClient` instances.
+        """
         return self._connection.voice_clients
 
     def is_ready(self):
-        """Specifies if the client's internal cache is ready for use."""
+        """:class:`bool`: Specifies if the client's internal cache is ready for use."""
         return self._ready.is_set()
 
     async def _run_event(self, coro, event_name, *args, **kwargs):
@@ -701,7 +713,7 @@ class Client:
     # properties
 
     def is_closed(self):
-        """Indicates if the websocket connection is closed."""
+        """:class:`bool`: Indicates if the websocket connection is closed."""
         return self._closed
 
     @property
@@ -736,6 +748,14 @@ class Client:
             self._connection.allowed_mentions = value
         else:
             raise TypeError('allowed_mentions must be AllowedMentions not {0.__class__!r}'.format(value))
+
+    @property
+    def intents(self):
+        """:class:`Intents`: The intents configured for this connection.
+
+        .. versionadded:: 1.5
+        """
+        return self._connection.intents
 
     # helpers/getters
 
@@ -818,6 +838,11 @@ class Client:
             Just because you receive a :class:`.abc.GuildChannel` does not mean that
             you can communicate in said channel. :meth:`.abc.GuildChannel.permissions_for` should
             be used for that.
+
+        Yields
+        ------
+        :class:`.abc.GuildChannel`
+            A channel the client can 'access'.
         """
 
         for guild in self.guilds:
@@ -832,6 +857,11 @@ class Client:
             for guild in client.guilds:
                 for member in guild.members:
                     yield member
+
+        Yields
+        ------
+        :class:`.Member`
+            A member the client can see.
         """
         for guild in self.guilds:
             for member in guild.members:
