@@ -200,6 +200,12 @@ class Member(discord.abc.Messageable, _BaseUser):
         data['user'] = author._to_minimal_user_json()
         return cls(data=data, guild=message.guild, state=message._state)
 
+    def _update_from_message(self, data):
+        self.joined_at = utils.parse_time(data.get('joined_at'))
+        self.premium_since = utils.parse_time(data.get('premium_since'))
+        self._update_roles(data)
+        self.nick = data.get('nick', None)
+
     @classmethod
     def _try_upgrade(cls, *,  data, guild, state):
         # A User object with a 'member' key
@@ -315,7 +321,7 @@ class Member(discord.abc.Messageable, _BaseUser):
         return try_enum(Status, self._client_status.get('web', 'offline'))
 
     def is_on_mobile(self):
-        """A helper function that determines if a member is active on a mobile device."""
+        """:class:`bool`: A helper function that determines if a member is active on a mobile device."""
         return 'mobile' in self._client_status
 
     @property
@@ -401,6 +407,11 @@ class Member(discord.abc.Messageable, _BaseUser):
         -----------
         message: :class:`Message`
             The message to check if you're mentioned in.
+
+        Returns
+        -------
+        :class:`bool`
+            Indicates if the member is mentioned in the message.
         """
         if message.guild is None or message.guild.id != self.guild.id:
             return False

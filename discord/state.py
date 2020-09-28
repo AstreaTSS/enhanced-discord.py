@@ -32,6 +32,7 @@ import itertools
 import logging
 import math
 import weakref
+import warnings
 import inspect
 import gc
 
@@ -82,6 +83,12 @@ class ChunkRequest:
 
 log = logging.getLogger(__name__)
 
+async def logging_coroutine(coroutine, *, info):
+    try:
+        await coroutine
+    except Exception:
+        log.exception('Exception occurred during %s', info)
+
 class ConnectionState:
     def __init__(self, *, dispatch, handlers, hooks, syncer, http, loop, **options):
         self.loop = loop
@@ -97,7 +104,6 @@ class ConnectionState:
         self.hooks = hooks
         self.shard_count = None
         self._ready_task = None
-        self._fetch_offline = options.get('fetch_offline_members', True)
         self.heartbeat_timeout = options.get('heartbeat_timeout', 60.0)
         self.guild_ready_timeout = options.get('guild_ready_timeout', 2.0)
         if self.guild_ready_timeout < 0:
@@ -130,21 +136,31 @@ class ConnectionState:
         if intents is not None:
             if not isinstance(intents, Intents):
                 raise TypeError('intents parameter must be Intent not %r' % type(intents))
-
-            if not intents.members and self._fetch_offline:
-                raise ValueError('Intents.members has be enabled to fetch offline members.')
-
         else:
-            intents = Intents()
+            intents = Intents.default()
+
+        try:
+            chunk_guilds = options['fetch_offline_members']
+        except KeyError:
+            chunk_guilds = options.get('chunk_guilds_at_startup', intents.members)
+        else:
+            msg = 'fetch_offline_members is deprecated, use chunk_guilds_at_startup instead'
+            warnings.warn(msg, DeprecationWarning, stacklevel=4)
+
+        self._chunk_guilds = chunk_guilds
+
+        # Ensure these two are set properly
+        if not intents.members and self._chunk_guilds:
+            raise ValueError('Intents.members must be enabled to chunk guilds at startup.')
 
         cache_flags = options.get('member_cache_flags', None)
         if cache_flags is None:
-            cache_flags = MemberCacheFlags.all()
+            cache_flags = MemberCacheFlags.from_intents(intents)
         else:
             if not isinstance(cache_flags, MemberCacheFlags):
                 raise TypeError('member_cache_flags parameter must be MemberCacheFlags not %r' % type(cache_flags))
 
-        cache_flags._verify_intents(intents)
+            cache_flags._verify_intents(intents)
 
         self._member_cache_flags = cache_flags
         self._activity = activity
@@ -214,6 +230,12 @@ class ConnectionState:
     def self_id(self):
         u = self.user
         return u.id if u else None
+
+    @property
+    def intents(self):
+        ret = Intents.none()
+        ret.value = self._intents.value
+        return ret
 
     @property
     def voice_clients(self):
@@ -328,7 +350,7 @@ class ConnectionState:
 
     def _guild_needs_chunking(self, guild):
         # If presences are enabled then we get back the old guild.large behaviour
-        return self._fetch_offline and not guild.chunked and not (self._intents.presences and not guild.large)
+        return self._chunk_guilds and not guild.chunked and not (self._intents.presences and not guild.large)
 
     def _get_guild_channel(self, data):
         channel_id = int(data['channel_id'])
@@ -941,9 +963,8 @@ class ConnectionState:
             if int(data['user_id']) == self.user.id:
                 voice = self._get_voice_client(guild.id)
                 if voice is not None:
-                    ch = guild.get_channel(channel_id)
-                    if ch is not None:
-                        voice.channel = ch
+                    coro = voice.on_voice_state_update(data)
+                    asyncio.ensure_future(logging_coroutine(coro, info='Voice Protocol voice state update handler'))
 
             member, before, after = guild._update_voice_state(data, channel_id)
             if member is not None:
@@ -971,7 +992,8 @@ class ConnectionState:
 
         vc = self._get_voice_client(key_id)
         if vc is not None:
-            asyncio.ensure_future(vc._create_socket(key_id, data))
+            coro = vc.on_voice_server_update(data)
+            asyncio.ensure_future(logging_coroutine(coro, info='Voice Protocol voice server update handler'))
 
     def parse_typing_start(self, data):
         channel, guild = self._get_guild_channel(data)

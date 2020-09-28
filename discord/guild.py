@@ -381,7 +381,7 @@ class Guild(Hashable):
 
     @property
     def voice_client(self):
-        """Optional[:class:`VoiceClient`]: Returns the :class:`VoiceClient` associated with this guild, if any."""
+        """Optional[:class:`VoiceProtocol`]: Returns the :class:`VoiceProtocol` associated with this guild, if any."""
         return self._state._get_voice_client(self.id)
 
     @property
@@ -716,7 +716,14 @@ class Guild(Hashable):
 
     @property
     def member_count(self):
-        """:class:`int`: Returns the true member count regardless of it being loaded fully or not."""
+        """:class:`int`: Returns the true member count regardless of it being loaded fully or not.
+
+        .. warning::
+
+            Due to a Discord limitation, in order for this attribute to remain up-to-date and
+            accurate, it requires :attr:`Intents.members` to be specified.
+
+        """
         return self._member_count
 
     @property
