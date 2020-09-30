@@ -133,6 +133,18 @@ class BotBase(GroupMixin):
             raise AttributeError('No owner_id specified or you used owner_ids. If you used owner_ids, please refer to `Bot.owners`')
         return self.get_user(self.owner_id)
 
+    @property
+    def owners(self):
+        """List[:class:`discord.User`]: The owners, retrieved from owner_ids. In case of improper caching, this list may not contain all owners."""
+        if not self.owner_ids or self.owner_id:
+            raise TypeError('No owner_ids specified or you used owner_id. If you used owner_id, please refer to `Bot.owner`')
+        owners = []
+        for user in self.owner_ids:
+            owner = self.get_user(user)
+            if owner:
+                owners.append(owner)
+        return owners
+    
     # internal helpers
 
     def dispatch(self, event_name, *args, **kwargs):
