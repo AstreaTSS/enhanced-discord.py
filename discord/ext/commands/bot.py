@@ -125,6 +125,13 @@ class BotBase(GroupMixin):
             self.help_command = DefaultHelpCommand()
         else:
             self.help_command = help_command
+            
+    @property
+    def owner(self):
+        """:class:`discord.User`: The owner, retrieved from owner_id. In case of improper caching, this can return None"""
+        if not self.owner_id or self.owner_ids:
+            raise AttributeError('No owner_id specified or you used owner_ids. If you used owner_ids, please refer to `Bot.owners`')
+        return self.get_user(self.owner_id)
 
     # internal helpers
 
