@@ -18,7 +18,7 @@ Credits to original lib by `Rappts <https://github.com/iDutchy/discord.py>`_
 Custom Features
 ---------------
 
-- **Documentation URL: https://enhanced-dpy.readthedocs.io/en/latest/index.html
+- **Documentation URL: https://enhanced-dpy.readthedocs.io/en/latest/index.html**
     - *URL at the bottom will redirect to the original libs documentation*
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
