@@ -12,6 +12,20 @@ discord.py
    :alt: PyPI supported Python versions
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
+Credits to original lib by Rappts: https://github.com/iDutchy/discord.py
+
+**WARNING: This is not the official discord.py lib! This is a custom version to which I add some features that might be useful or just makes things easier for the lazy people. See below which features have been added. This lib will also be kept updated with the BETA version of the original lib! So things may be unstable, please keep that in mind.**
+
+Custom Features
+---------------
+
+- **Documentation URL: https://enhanced-dpy.readthedocs.io/en/latest/index.html
+    - *URL at the bottom will redirect to the original libs documentation*
+- Added ``Guild.bots`` / ``Guild.humans``
+- Added ``Bot.owner`` / ``Bot.owners``
+- Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
+- Using Rapptz/discord.py/tree/neo-docs for documentation
+- Adding support for ``hex()`` to ``discord.Color``
 
 Key Features
 -------------
