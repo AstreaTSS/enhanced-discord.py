@@ -30,47 +30,107 @@ There are two main ways to query version information about the library. For guar
     A string representation of the version. e.g. ``'1.0.0rc1'``. This is based
     off of :pep:`440`.
 
+Clients
+--------
+
 Client
--------
+~~~~~~~
+
+.. attributetable:: Client
 
 .. autoclass:: Client
     :members:
 
+AutoShardedClient
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AutoShardedClient
+
 .. autoclass:: AutoShardedClient
     :members:
+
+Application Info
+------------------
+
+AppInfo
+~~~~~~~~
+
+.. attributetable:: AppInfo
 
 .. autoclass:: AppInfo()
     :members:
 
+Team
+~~~~~
+
+.. attributetable:: Team
+
 .. autoclass:: Team()
     :members:
+
+TeamMember
+~~~~~~~~~~~
+
+.. attributetable:: TeamMember
 
 .. autoclass:: TeamMember()
     :members:
 
-Voice
-------
+Voice Related
+---------------
+
+VoiceClient
+~~~~~~~~~~~~
+
+.. attributetable:: VoiceClient
 
 .. autoclass:: VoiceClient()
     :members:
 
-.. autoclass:: VoiceProtocol
-    :members:
+AudioSource
+~~~~~~~~~~~~
+
+.. attributetable:: AudioSource
 
 .. autoclass:: AudioSource
     :members:
 
+PCMAudio
+~~~~~~~~~
+
+.. attributetable:: PCMAudio
+
 .. autoclass:: PCMAudio
     :members:
+
+FFmpegAudio
+~~~~~~~~~~~~
+
+.. attributetable:: FFmpegAudio
 
 .. autoclass:: FFmpegAudio
     :members:
 
+FFmpegPCMAudio
+~~~~~~~~~~~~~~~
+
+.. attributetable:: FFmpegPCMAudio
+
 .. autoclass:: FFmpegPCMAudio
     :members:
 
+FFmpegOpusAudio
+~~~~~~~~~~~~~~~~
+
+.. attributetable:: FFmpegOpusAudio
+
 .. autoclass:: FFmpegOpusAudio
     :members:
+
+PCMVolumeTransformer
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PCMVolumeTransformer
 
 .. autoclass:: PCMVolumeTransformer
     :members:
@@ -2036,8 +2096,18 @@ Working with :meth:`Guild.audit_logs` is a complicated process with a lot of mac
 involved. The library attempts to make it easy to use and friendly. In order to accomplish
 this goal, it must make use of a couple of data classes that aid in this goal.
 
+AuditLogEntry
+~~~~~~~~~~~~~~~
+
+.. attributetable:: AuditLogEntry
+
 .. autoclass:: AuditLogEntry
     :members:
+
+AuditLogChanges
+~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AuditLogChanges
 
 .. class:: AuditLogChanges
 
@@ -2082,6 +2152,11 @@ this goal, it must make use of a couple of data classes that aid in this goal.
         +----------------------------------------+--------------------------------------------------+
         | ``None``                               | No attributes are set.                           |
         +----------------------------------------+--------------------------------------------------+
+
+AuditLogDiff
+~~~~~~~~~~~~~
+
+.. attributetable:: AuditLogDiff
 
 .. class:: AuditLogDiff
 
@@ -2428,6 +2503,8 @@ Webhook Support
 
 discord.py offers support for creating, editing, and executing webhooks through the :class:`Webhook` class.
 
+.. attributetable:: Webhook
+
 .. autoclass:: Webhook
     :members:
 
@@ -2459,17 +2536,42 @@ They are mainly there for usage with :func:`py:isinstance` and :func:`py:issubcl
 This library has a module related to abstract base classes, some of which are actually from the :doc:`abc <py:library/abc>` standard
 module, others which are not.
 
+Snowflake
+~~~~~~~~~~
+
+.. attributetable:: discord.abc.Snowflake
+
 .. autoclass:: discord.abc.Snowflake
     :members:
+
+User
+~~~~~
+
+.. attributetable:: discord.abc.User
 
 .. autoclass:: discord.abc.User
     :members:
 
+PrivateChannel
+~~~~~~~~~~~~~~~
+
+.. attributetable:: discord.abc.PrivateChannel
+
 .. autoclass:: discord.abc.PrivateChannel
     :members:
 
+GuildChannel
+~~~~~~~~~~~~~
+
+.. attributetable:: discord.abc.GuildChannel
+
 .. autoclass:: discord.abc.GuildChannel
     :members:
+
+Messageable
+~~~~~~~~~~~~
+
+.. attributetable:: discord.abc.Messageable
 
 .. autoclass:: discord.abc.Messageable
     :members:
@@ -2480,6 +2582,11 @@ module, others which are not.
 
     .. automethod:: discord.abc.Messageable.typing
         :async-with:
+
+Connectable
+~~~~~~~~~~~~
+
+.. attributetable:: discord.abc.Connectable
 
 .. autoclass:: discord.abc.Connectable
 
@@ -2513,6 +2620,8 @@ the user of the library.
 ClientUser
 ~~~~~~~~~~~~
 
+.. attributetable:: ClientUser
+
 .. autoclass:: ClientUser()
     :members:
     :inherited-members:
@@ -2520,11 +2629,15 @@ ClientUser
 Relationship
 ~~~~~~~~~~~~~~
 
+.. attributetable:: Relationship
+
 .. autoclass:: Relationship()
     :members:
 
 User
 ~~~~~
+
+.. attributetable:: User
 
 .. autoclass:: User()
     :members:
@@ -2540,11 +2653,15 @@ User
 Attachment
 ~~~~~~~~~~~
 
+.. attributetable:: Attachment
+
 .. autoclass:: Attachment()
     :members:
 
 Asset
 ~~~~~
+
+.. attributetable:: Asset
 
 .. autoclass:: Asset()
     :members:
@@ -2552,11 +2669,15 @@ Asset
 Message
 ~~~~~~~
 
+.. attributetable:: Message
+
 .. autoclass:: Message()
     :members:
 
 Reaction
 ~~~~~~~~~
+
+.. attributetable:: Reaction
 
 .. autoclass:: Reaction()
     :members:
@@ -2568,17 +2689,23 @@ Reaction
 CallMessage
 ~~~~~~~~~~~~
 
+.. attributetable:: CallMessage
+
 .. autoclass:: CallMessage()
     :members:
 
 GroupCall
 ~~~~~~~~~~
 
+.. attributetable:: GroupCall
+
 .. autoclass:: GroupCall()
     :members:
 
 Guild
 ~~~~~~
+
+.. attributetable:: Guild
 
 .. autoclass:: Guild()
     :members:
@@ -2599,6 +2726,8 @@ Integration
 Member
 ~~~~~~
 
+.. attributetable:: Member
+
 .. autoclass:: Member()
     :members:
     :inherited-members:
@@ -2613,11 +2742,15 @@ Member
 Spotify
 ~~~~~~~~
 
+.. attributetable:: Spotify
+
 .. autoclass:: Spotify()
     :members:
 
 VoiceState
 ~~~~~~~~~~~
+
+.. attributetable:: VoiceState
 
 .. autoclass:: VoiceState()
     :members:
@@ -2625,11 +2758,15 @@ VoiceState
 Emoji
 ~~~~~
 
+.. attributetable:: Emoji
+
 .. autoclass:: Emoji()
     :members:
 
 PartialEmoji
 ~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialEmoji
 
 .. autoclass:: PartialEmoji()
     :members:
@@ -2637,11 +2774,15 @@ PartialEmoji
 Role
 ~~~~~
 
+.. attributetable:: Role
+
 .. autoclass:: Role()
     :members:
 
 TextChannel
 ~~~~~~~~~~~~
+
+.. attributetable:: TextChannel
 
 .. autoclass:: TextChannel()
     :members:
@@ -2657,6 +2798,8 @@ TextChannel
 VoiceChannel
 ~~~~~~~~~~~~~
 
+.. attributetable:: VoiceChannel
+
 .. autoclass:: VoiceChannel()
     :members:
     :inherited-members:
@@ -2664,12 +2807,16 @@ VoiceChannel
 CategoryChannel
 ~~~~~~~~~~~~~~~~~
 
+.. attributetable:: CategoryChannel
+
 .. autoclass:: CategoryChannel()
     :members:
     :inherited-members:
 
 DMChannel
 ~~~~~~~~~
+
+.. attributetable:: DMChannel
 
 .. autoclass:: DMChannel()
     :members:
@@ -2685,6 +2832,8 @@ DMChannel
 GroupChannel
 ~~~~~~~~~~~~
 
+.. attributetable:: GroupChannel
+
 .. autoclass:: GroupChannel()
     :members:
     :inherited-members:
@@ -2699,17 +2848,23 @@ GroupChannel
 PartialInviteGuild
 ~~~~~~~~~~~~~~~~~~~
 
+.. attributetable:: PartialInviteGuild
+
 .. autoclass:: PartialInviteGuild()
     :members:
 
 PartialInviteChannel
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. attributetable:: PartialInviteChannel
+
 .. autoclass:: PartialInviteChannel()
     :members:
 
 Invite
 ~~~~~~~
+
+.. attributetable:: Invite
 
 .. autoclass:: Invite()
     :members:
@@ -2723,11 +2878,15 @@ Template
 WidgetChannel
 ~~~~~~~~~~~~~~~
 
+.. attributetable:: WidgetChannel
+
 .. autoclass:: WidgetChannel()
     :members:
 
 WidgetMember
 ~~~~~~~~~~~~~
+
+.. attributetable:: WidgetMember
 
 .. autoclass:: WidgetMember()
     :members:
@@ -2735,6 +2894,8 @@ WidgetMember
 
 Widget
 ~~~~~~~
+
+.. attributetable:: Widget
 
 .. autoclass:: Widget()
     :members:
@@ -2747,11 +2908,15 @@ MessageReference
 RawMessageDeleteEvent
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. attributetable:: RawMessageDeleteEvent
+
 .. autoclass:: RawMessageDeleteEvent()
     :members:
 
 RawBulkMessageDeleteEvent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RawBulkMessageDeleteEvent
 
 .. autoclass:: RawBulkMessageDeleteEvent()
     :members:
@@ -2759,11 +2924,15 @@ RawBulkMessageDeleteEvent
 RawMessageUpdateEvent
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. attributetable:: RawMessageUpdateEvent
+
 .. autoclass:: RawMessageUpdateEvent()
     :members:
 
 RawReactionActionEvent
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RawReactionActionEvent
 
 .. autoclass:: RawReactionActionEvent()
     :members:
@@ -2771,11 +2940,15 @@ RawReactionActionEvent
 RawReactionClearEvent
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. attributetable:: RawReactionClearEvent
+
 .. autoclass:: RawReactionClearEvent()
     :members:
 
 RawReactionClearEmojiEvent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RawReactionClearEmojiEvent
 
 .. autoclass:: RawReactionClearEmojiEvent()
     :members:
@@ -2807,11 +2980,15 @@ Object
 Embed
 ~~~~~~
 
+.. attributetable:: Embed
+
 .. autoclass:: Embed
     :members:
 
 AllowedMentions
 ~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AllowedMentions
 
 .. autoclass:: AllowedMentions
     :members:
@@ -2831,11 +3008,15 @@ MemberCacheFlags
 File
 ~~~~~
 
+.. attributetable:: File
+
 .. autoclass:: File
     :members:
 
 Colour
 ~~~~~~
+
+.. attributetable:: Colour
 
 .. autoclass:: Colour
     :members:
@@ -2843,11 +3024,15 @@ Colour
 BaseActivity
 ~~~~~~~~~~~~~~
 
+.. attributetable:: BaseActivity
+
 .. autoclass:: BaseActivity
     :members:
 
 Activity
 ~~~~~~~~~
+
+.. attributetable:: Activity
 
 .. autoclass:: Activity
     :members:
@@ -2855,11 +3040,15 @@ Activity
 Game
 ~~~~~
 
+.. attributetable:: Game
+
 .. autoclass:: Game
     :members:
 
 Streaming
 ~~~~~~~~~~~
+
+.. attributetable:: Streaming
 
 .. autoclass:: Streaming
     :members:
@@ -2867,17 +3056,23 @@ Streaming
 CustomActivity
 ~~~~~~~~~~~~~~~
 
+.. attributetable:: CustomActivity
+
 .. autoclass:: CustomActivity
     :members:
 
 Permissions
 ~~~~~~~~~~~~
 
+.. attributetable:: Permissions
+
 .. autoclass:: Permissions
     :members:
 
 PermissionOverwrite
 ~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PermissionOverwrite
 
 .. autoclass:: PermissionOverwrite
     :members:
