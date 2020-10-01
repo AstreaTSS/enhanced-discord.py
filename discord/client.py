@@ -285,15 +285,19 @@ class Client:
 
     @embed_color.setter
     def embed_color(self, value):
-        HEX = re.compile(r'^(0x)[A-Fa-f0-9]{6}$')
+
         if isinstance(value, (Color, Colour)):
-            self._embed_color = hex(value)
-            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(value))
-        elif HEX.match(str(value)):
-            self._embed_color = value
+            self._embed_color = str(value)
             os.environ['DEFAULT_EMBED_COLOR'] = str(value)
         else:
-            raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
+            try:
+                HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
+                col = str(Color(value))
+                if HEX.match(col):
+                    self._embed_color = col
+                    os.environ['DEFAULT_EMBED_COLOR'] = str(col)
+            except:
+                raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
     @property
     def latency(self):
