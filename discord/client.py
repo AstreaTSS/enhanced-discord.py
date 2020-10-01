@@ -290,16 +290,6 @@ class Client:
         self._ready.set()
 
     @property
-    def embed_color(self):
-        """Optional[:class:`.Color`]: The default color for all embeds
-        """
-        return self._embed_color
-
-    @embed_color.setter
-    def embed_color(self, value):
-
-
-    @property
     def latency(self):
         """:class:`float`: Measures latency between a HEARTBEAT and a HEARTBEAT_ACK in seconds.
 
