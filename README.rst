@@ -14,7 +14,6 @@ Custom Features
 ---------------
 
 - **Documentation URL: https://enhanced-dpy.readthedocs.io/en/latest/index.html
-    - *URL at the bottom will redirect to the original libs documentation*
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
@@ -39,27 +38,16 @@ To install the library without full voice support, you can just run the followin
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U discord.py
+    python3 -m pip install -U git+https://github.com/iDutchy/discord.py
 
     # Windows
-    py -3 -m pip install -U discord.py
-
-Otherwise to get voice support you should run the following command:
-
-.. code:: sh
-
-    # Linux/macOS
-    python3 -m pip install -U "discord.py[voice]"
-
-    # Windows
-    py -3 -m pip install -U discord.py[voice]
-
+    py -3 -m pip install -U git+https://github.com/iDutchy/discord.py
 
 To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone https://github.com/Rapptz/discord.py
+    $ git clone https://github.com/iDutchy/discord.py
     $ cd discord.py
     $ python3 -m pip install -U .[voice]
 
@@ -117,6 +105,6 @@ You can find more examples in the examples directory.
 Links
 ------
 
-- `Documentation <https://discordpy.readthedocs.io/en/latest/index.html>`_
-- `Official Discord Server <https://discord.gg/r3sSKJJ>`_
+- `Documentation <https://enhanced-dpy.readthedocs.io/en/latest/index.html>`_
+- `Official Discord Server <https://discord.gg/wZSH7pz>`_
 - `Discord API <https://discord.gg/discord-api>`_

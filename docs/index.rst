@@ -19,7 +19,6 @@ Custom Features
 ---------------
 
 - **Documentation URL:** https://enhanced-dpy.readthedocs.io/en/latest/index.html
-    - *URL at the bottom will redirect to the original libs documentation*
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
