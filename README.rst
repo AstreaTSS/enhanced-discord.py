@@ -1,18 +1,12 @@
-discord.py
+Enhanced-dpy (custom discord.py)
 ==========
 
-.. image:: https://discord.com/api/guilds/336642139381301249/embed.png
-   :target: https://discord.gg/r3sSKJJ
-   :alt: Discord server invite
-.. image:: https://img.shields.io/pypi/v/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
-   :alt: PyPI version info
 .. image:: https://img.shields.io/pypi/pyversions/discord.py.svg
    :target: https://pypi.python.org/pypi/discord.py
    :alt: PyPI supported Python versions
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
-Credits to original lib by `Rappts <https://github.com/iDutchy/discord.py>`_
+Credits to the `original lib by Rapptz <https://github.com/iDutchy/discord.py>`_
 
 **WARNING: This is not the official discord.py lib! This is a custom version to which I add some features that might be useful or just makes things easier for the lazy people. See below which features have been added. This lib will also be kept updated with the BETA version of the original lib! So things may be unstable, please keep that in mind.**
 
