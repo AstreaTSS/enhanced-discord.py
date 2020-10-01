@@ -191,7 +191,7 @@ class Client:
 
             If this is set to ``False`` then the following features will be disabled:
 
-                - No user related updates (:func:`on_user_update` will not dispatch)
+                - No user related updates (:func:`on_user_update` will not dispatch)EmptyEmbed
                 - All member related events will be disabled.
                     - :func:`on_member_update`
                     - :func:`on_member_join`
@@ -285,10 +285,10 @@ class Client:
 
     @embed_color.setter
     def embed_color(self, value):
+        HEX = re.compile(r'^(0x)[A-Fa-f0-9]{6}$')
         if isinstance(value, (Color, Colour)):
             self._embed_color = hex(value)
             os.environ['DEFAULT_EMBED_COLOR'] = str(hex(value))
-        HEX = re.compile(r'^(0x)[A-Fa-f0-9]{6}$')
         elif HEX.match(str(value))):
             self._embed_color = value
             os.environ['DEFAULT_EMBED_COLOR'] = str(value)
