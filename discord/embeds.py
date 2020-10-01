@@ -111,6 +111,8 @@ class Embed:
         except KeyError:
             default_colour = kwargs.get('color', EmptyEmbed)
             colour = os.getenv("DEFAULT_EMBED_COLOR", default=default_colour)
+            if isinstance(colour, str):
+                colour = int(colour, 16)
 
 
         self.colour = colour
