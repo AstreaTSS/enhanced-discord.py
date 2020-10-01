@@ -289,7 +289,7 @@ class Client:
         if isinstance(value, (Color, Colour)):
             self._embed_color = hex(value)
             os.environ['DEFAULT_EMBED_COLOR'] = str(hex(value))
-        elif HEX.match(str(value))):
+        elif HEX.match(str(value)):
             self._embed_color = value
             os.environ['DEFAULT_EMBED_COLOR'] = str(value)
         else:
