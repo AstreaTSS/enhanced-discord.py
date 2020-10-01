@@ -286,15 +286,15 @@ class Client:
     @embed_color.setter
     def embed_color(self, value):
         if isinstance(value, (Color, Colour)):
-            self._embed_color = str(hex(value))
-            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(value))
+            self._embed_color = str(int(value))
+            os.environ['DEFAULT_EMBED_COLOR'] = str(int(value))
         else:
             try:
                 HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
                 col = Color(value)
                 if HEX.match(str(col)):
-                    self._embed_color = str(hex(col))
-                    os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
+                    self._embed_color = str(int(col))
+                    os.environ['DEFAULT_EMBED_COLOR'] = str(int(col))
             except:
                 raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
