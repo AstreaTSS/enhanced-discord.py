@@ -17,6 +17,7 @@ Custom Features
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
 - Added ``Client.try_user`` / ``Bot.try_user``
+- ``Guild.icon_url`` and ``User.avatar_url`` return the string in stead of Asset. use icon/avatar url_as to get the Asset
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
 - Using Rapptz/discord.py/tree/neo-docs for documentation
 - Adding support for ``hex()`` to ``discord.Color``
