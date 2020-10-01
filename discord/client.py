@@ -285,7 +285,6 @@ class Client:
 
     @embed_color.setter
     def embed_color(self, value):
-
         if isinstance(value, (Color, Colour)):
             self._embed_color = str(value)
             os.environ['DEFAULT_EMBED_COLOR'] = str(value)

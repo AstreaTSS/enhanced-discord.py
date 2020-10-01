@@ -112,7 +112,7 @@ class Embed:
             default_colour = kwargs.get('color', EmptyEmbed)
             colour = os.getenv("DEFAULT_EMBED_COLOR", default=default_colour)
             if isinstance(colour, str):
-                colour = int(colour, 16)
+                colour = int(colour.replace('#', '0x'), 16)
 
 
         self.colour = colour
