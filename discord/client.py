@@ -235,7 +235,19 @@ class Client:
         self._listeners = {}
         self.shard_id = options.get('shard_id')
         self.shard_count = options.get('shard_count')
-        self._embed_color = options.get('embed_color')
+        colour = options.get('embed_color')
+        if isinstance(colour, (Color, Colour)):
+            self.embed_color = str(hex(colour))
+            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(colour))
+        else:
+            try:
+                HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
+                col = Color(colour)
+                if HEX.match(str(col)):
+                    self.embed_color = str(hex(col))
+                    os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
+            except:
+                raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
         connector = options.pop('connector', None)
         proxy = options.pop('proxy', None)
@@ -285,18 +297,7 @@ class Client:
 
     @embed_color.setter
     def embed_color(self, value):
-        if isinstance(value, (Color, Colour)):
-            self._embed_color = str(hex(value))
-            os.environ['DEFAULT_EMBED_COLOR'] = str(int(value))
-        else:
-            try:
-                HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
-                col = Color(value)
-                if HEX.match(str(col)):
-                    self._embed_color = str(int(col))
-                    os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
-            except:
-                raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
+
 
     @property
     def latency(self):
