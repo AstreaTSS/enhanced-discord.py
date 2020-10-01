@@ -278,14 +278,14 @@ class Client:
 
     # internals
 
-    def set_embed_color(self, new_color):
+    def set_embed_color(self, color):
         """Set a new default embed color.
 
         This will raise a TypeError if an improper format was passed.
 
         Parameters
         -----------
-        name: Union[:class:`.Colour`, :class:`int`]
+        color: Union[:class:`.Colour`, :class:`int`]
             The new color you want to set as default embed color.
             Pass either an instance of discord.Color or a valid
             0x****** HEX value.
