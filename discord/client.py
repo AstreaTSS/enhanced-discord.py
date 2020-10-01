@@ -246,6 +246,8 @@ class Client:
                 if HEX.match(str(col)):
                     self.embed_color = str(hex(col))
                     os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
+                else:
+                    raise TypeError('The hex value passed could not be converted to a color')
             except:
                 raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
@@ -275,6 +277,40 @@ class Client:
             log.warning("PyNaCl is not installed, voice will NOT be supported")
 
     # internals
+
+    def set_embed_color(self, new_color):
+        """Set a new default embed color.
+
+        This will raise a TypeError if an improper format was passed.
+
+        Parameters
+        -----------
+        name: Union[:class:`.Colour`, :class:`int`]
+            The new color you want to set as default embed color.
+            Pass either an instance of discord.Color or a valid
+            0x****** HEX value.
+
+        Returns
+        --------
+        :class:`.Colour`
+            The new color that has been set as default embed color.
+        """
+        if isinstance(new_color, (Color, Colour)):
+            self.embed_color = str(hex(new_color))
+            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(new_color))
+            return new_color
+        else:
+            try:
+                HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
+                col = Color(new_color)
+                if HEX.match(str(col)):
+                    self.embed_color = str(hex(col))
+                    os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
+                    return col
+                else:
+                    raise TypeError('The hex value passed could not be converted to a color')
+            except:
+                raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
     def _get_websocket(self, guild_id=None, *, shard_id=None):
         return self.ws
