@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
+import os
 
 from . import utils
 from .colour import Colour
@@ -108,7 +109,9 @@ class Embed:
         try:
             colour = kwargs['colour']
         except KeyError:
-            colour = kwargs.get('color', EmptyEmbed)
+            default_colour = kwargs.get('color', EmptyEmbed)
+            colour = os.getenv("DEFAULT_EMBED_COLOR", default=default_colour)
+
 
         self.colour = colour
         self.title = kwargs.get('title', EmptyEmbed)

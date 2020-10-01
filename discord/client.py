@@ -29,6 +29,8 @@ import logging
 import signal
 import sys
 import traceback
+import os
+import re
 
 import aiohttp
 
@@ -55,6 +57,7 @@ from .backoff import ExponentialBackoff
 from .webhook import Webhook
 from .iterators import GuildIterator
 from .appinfo import AppInfo
+from .colour import Color, Colour
 
 log = logging.getLogger(__name__)
 
@@ -232,6 +235,7 @@ class Client:
         self._listeners = {}
         self.shard_id = options.get('shard_id')
         self.shard_count = options.get('shard_count')
+        self._embed_color = options.get('embed_color')
 
         connector = options.pop('connector', None)
         proxy = options.pop('proxy', None)
@@ -272,6 +276,24 @@ class Client:
 
     def _handle_ready(self):
         self._ready.set()
+
+    @property
+    def embed_color(self):
+        """Optional[:class:`.Color`]: The default color for all embeds
+        """
+        return self._embed_color
+
+    @embed_color.setter
+    def embed_color(self, value):
+        if isinstance(value, (Color, Colour)):
+            self._embed_color = hex(value)
+            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(value))
+        HEX = re.compile(r'^(0x)[A-Fa-f0-9]{6}$')
+        elif HEX.match(str(value))):
+            self._embed_color = value
+            os.environ['DEFAULT_EMBED_COLOR'] = str(value)
+        else:
+            raise TypeError('embed_color must be an instance of discord.Colour or a valid 0x****** hex value.')
 
     @property
     def latency(self):
