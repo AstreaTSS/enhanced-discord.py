@@ -13,7 +13,7 @@ Credits to the `original lib by Rapptz <https://github.com/iDutchy/discord.py>`_
 Custom Features
 ---------------
 
-- **Documentation URL: https://enhanced-dpy.readthedocs.io/en/latest/index.html
+- **Documentation URL:** https://enhanced-dpy.readthedocs.io/en/latest/index.html
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
