@@ -1343,6 +1343,40 @@ class Client:
             data['rpc_origins'] = None
         return AppInfo(self._connection, data)
 
+    async def try_user(self, user_id):
+        """|coro|
+
+        Retrieves a :class:`~discord.User` based on their ID. This can only
+        be used by bot accounts. 
+
+        .. note::
+
+            This will first attempt to get the user from the cache.
+            If that fails, it will make an API call.
+            For general usage, consider :meth:`get_user` instead.
+
+        Parameters
+        -----------
+        user_id: :class:`int`
+            The user's ID to fetch from.
+
+        Raises
+        -------
+        :exc:`.NotFound`
+            A user with this ID does not exist.
+        :exc:`.HTTPException`
+            Fetching the user failed.
+
+        Returns
+        --------
+        :class:`~discord.User`
+            The user you requested.
+        """
+        user = self.get_user(user_id)
+        if user is None:
+            user = await self.fetch_user(user_id)
+        return user
+
     async def fetch_user(self, user_id):
         """|coro|
 

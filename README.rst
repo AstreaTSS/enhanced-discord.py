@@ -16,6 +16,7 @@ Custom Features
 - **Documentation URL:** https://enhanced-dpy.readthedocs.io/en/latest/index.html
 - Added ``Guild.bots`` / ``Guild.humans``
 - Added ``Bot.owner`` / ``Bot.owners``
+- Added ``Client.try_user`` / ``Bot.try_user``
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
 - Using Rapptz/discord.py/tree/neo-docs for documentation
 - Adding support for ``hex()`` to ``discord.Color``
