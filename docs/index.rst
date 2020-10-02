@@ -27,6 +27,7 @@ Custom Features
 - Using Rapptz/discord.py/tree/neo-docs for documentation
 - Adding support for ``hex()`` to ``discord.Color``
 - Added ``Client.embed_color`` / ``Bot.embed_color``
+- Added ``Client.set_embed_color`` / ``Bot.set_embed_color``
 - Added ``TextChannel.can_send``
 
 Features
