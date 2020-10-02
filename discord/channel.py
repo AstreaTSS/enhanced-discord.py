@@ -142,6 +142,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
     def _sorting_bucket(self):
         return ChannelType.text.value
 
+    @property
+    def can_send(self):
+        return self.guild.me.guild_permissions.send_messages
+
     def permissions_for(self, member):
         base = super().permissions_for(member)
 
