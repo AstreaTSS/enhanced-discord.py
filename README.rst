@@ -21,6 +21,8 @@ Custom Features
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
 - Using Rapptz/discord.py/tree/neo-docs for documentation
 - Adding support for ``hex()`` to ``discord.Color``
+- Added ``Client.embed_color`` / ``Bot.embed_color``
+- Added ``TextChannel.can_send``
 
 Key Features
 -------------

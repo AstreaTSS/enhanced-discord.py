@@ -221,6 +221,10 @@ class Client:
         sync your system clock to Google's NTP server.
 
         .. versionadded:: 1.3
+    embed_color: Union[:class:`.Colour`, :class:`int`]
+        The default embed color you want to use when initialising a :class:`.Embed`. This will
+        remove the need to set the color per embed, but can still be overridden by setting a
+        color while creating an instance of an embed.
 
     Attributes
     -----------
