@@ -408,14 +408,10 @@ class Intents(BaseFlags):
             if item not in cls.VALID_FLAGS.keys():
                 intents_list.remove(item)
 
-        items = {}
+        self = cls.none()
         for item in intents_list:
-            items[item] = cls.VALID_FLAGS[item]
+            setattr(self, item, True)
 
-        bits = max(items.values()).bit_length()
-        value = (1 << bits) - 1
-        self = cls.__new__(cls)
-        self.value = value
         return self
 
     @classmethod
