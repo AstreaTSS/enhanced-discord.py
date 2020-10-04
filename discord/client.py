@@ -241,14 +241,12 @@ class Client:
         self.shard_count = options.get('shard_count')
         colour = options.get('embed_color')
         if isinstance(colour, (Color, Colour)):
-            self.embed_color = str(hex(colour))
             os.environ['DEFAULT_EMBED_COLOR'] = str(hex(colour))
         else:
             try:
                 HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
                 col = Color(colour)
                 if HEX.match(str(col)):
-                    self.embed_color = str(hex(col))
                     os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
                 else:
                     raise TypeError('The hex value passed could not be converted to a color')
@@ -282,6 +280,15 @@ class Client:
 
     # internals
 
+    @property
+    def embed_color(self):
+        """Optional[:class:`.Colour`]: The default embed colour that is
+        being used for all embed if no colour is passed."""
+        col = os.getenv("DEFAULT_EMBED_COLOR")
+        if not col:
+            return None
+        return Colour(int(col, 16))
+
     def set_embed_color(self, color):
         """Set a new default embed color.
 
@@ -299,16 +306,14 @@ class Client:
         :class:`.Colour`
             The new color that has been set as default embed color.
         """
-        if isinstance(new_color, (Color, Colour)):
-            self.embed_color = str(hex(new_color))
-            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(new_color))
-            return new_color
+        if isinstance(color, (Color, Colour)):
+            os.environ['DEFAULT_EMBED_COLOR'] = str(hex(color))
+            return color
         else:
             try:
                 HEX = re.compile(r'^(#)[A-Fa-f0-9]{6}$')
-                col = Color(new_color)
+                col = Color(color)
                 if HEX.match(str(col)):
-                    self.embed_color = str(hex(col))
                     os.environ['DEFAULT_EMBED_COLOR'] = str(hex(col))
                     return col
                 else:
