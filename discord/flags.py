@@ -408,7 +408,7 @@ class Intents(BaseFlags):
             if item not in cls.VALID_FLAGS.keys():
                 intents_list.remove(item)
 
-        self = cls.__new__(cls)
+        self = cls.all()
         for item in cls.VALID_FLAGS.keys():
             if item not in intents_list:
                 setattr(self, item, False)
