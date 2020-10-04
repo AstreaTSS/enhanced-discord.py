@@ -403,6 +403,19 @@ class Intents(BaseFlags):
             setattr(self, key, value)
 
     @classmethod
+    def from_list(cls, intents_list):
+        for item in intents_list:
+            if item not in cls.VALID_FLAGS.keys():
+                intents_list.remove(item)
+
+        self = cls.__new__(cls)
+        for item in cls.VALID_FLAGS.keys():
+            if item not in intents_list:
+                setattr(self, item, False)
+
+        return self
+
+    @classmethod
     def all(cls):
         """A factory method that creates a :class:`Intents` with everything enabled."""
         bits = max(cls.VALID_FLAGS.values()).bit_length()
