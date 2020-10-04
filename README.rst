@@ -24,6 +24,7 @@ Custom Features
 - Added ``Client.embed_color`` / ``Bot.embed_color``
 - Added ``Client.set_embed_color`` / ``Bot.set_embed_color``
 - Added ``TextChannel.can_send``
+- Added ``Intents.from_list``
 
 Key Features
 -------------
