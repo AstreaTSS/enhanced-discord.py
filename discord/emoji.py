@@ -112,6 +112,9 @@ class Emoji(_EmojiTag):
             return '<a:{0.name}:{0.id}>'.format(self)
         return "<:{0.name}:{0.id}>".format(self)
 
+    def __int__(self):
+        return self.id
+
     def __repr__(self):
         return '<Emoji id={0.id} name={0.name!r} animated={0.animated} managed={0.managed}>'.format(self)
 

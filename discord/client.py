@@ -239,7 +239,7 @@ class Client:
         self._listeners = {}
         self.shard_id = options.get('shard_id')
         self.shard_count = options.get('shard_count')
-        colour = options.get('embed_color')
+        colour = options.get('embed_color', Color.default())
         if isinstance(colour, (Color, Colour)):
             os.environ['DEFAULT_EMBED_COLOR'] = str(hex(colour))
         else:
