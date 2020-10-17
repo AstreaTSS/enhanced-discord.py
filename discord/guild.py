@@ -207,9 +207,6 @@ class Guild(Hashable):
     def __str__(self):
         return self.name
 
-    def __int__(self):
-        return self.id
-
     def __repr__(self):
         attrs = (
             'id', 'name', 'shard_id', 'chunked'

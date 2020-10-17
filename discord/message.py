@@ -84,9 +84,6 @@ class Attachment:
         """:class:`bool`: Whether this attachment contains a spoiler."""
         return self.filename.startswith('SPOILER_')
 
-    def __int__(self):
-        return self.id
-
     def __repr__(self):
         return '<Attachment id={0.id} filename={0.filename!r} url={0.url!r}>'.format(self)
 
@@ -390,9 +387,6 @@ class Message:
 
     def __str__(self):
         return self.content
-
-    def __int__(self):
-        return self.id
 
     def __repr__(self):
         return '<Message id={0.id} channel={0.channel!r} type={0.type!r} author={0.author!r} flags={0.flags!r}>'.format(self)

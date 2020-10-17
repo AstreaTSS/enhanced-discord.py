@@ -99,9 +99,6 @@ class Role(Hashable):
     def __str__(self):
         return self.name
 
-    def __int__(self):
-        return self.id
-
     def __repr__(self):
         return '<Role id={0.id} name={0.name!r}>'.format(self)
 
