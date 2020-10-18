@@ -46,7 +46,7 @@ setup(name='enhanced-dpy',
       author='iDutchy',
       url='https://github.com/iDutchy/discord.py',
       project_urls={
-        "Documentation": "https://discordpy.readthedocs.io/en/latest/",
+        "Documentation": "https://enhanced-dpy.readthedocs.io/en/latest/",
         "Issue tracker": "https://github.com/iDutchy/discord.py/issues",
       },
       version=version,
