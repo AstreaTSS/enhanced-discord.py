@@ -1,5 +1,5 @@
 Enhanced-dpy (custom discord.py)
-==========
+=================================
 
 .. image:: https://img.shields.io/pypi/pyversions/discord.py.svg
    :target: https://pypi.python.org/pypi/discord.py
@@ -11,7 +11,7 @@ Credits to the `original lib by Rapptz <https://github.com/iDutchy/discord.py>`_
 **WARNING: This is not the official discord.py lib! This is a custom version to which I add some features that might be useful or just makes things easier for the lazy people. See below which features have been added. This lib will also be kept updated with the BETA version of the original lib! So things may be unstable, please keep that in mind.**
 
 Custom Features
----------------
+----------------
 
 - **Documentation URL:** https://enhanced-dpy.readthedocs.io/en/latest/index.html
 - Added ``Guild.bots`` / ``Guild.humans``
