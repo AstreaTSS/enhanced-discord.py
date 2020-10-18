@@ -20,11 +20,13 @@ Custom Features
 - ``Guild.icon_url`` and ``User.avatar_url`` return the string in stead of Asset. use icon/avatar url_as to get the Asset
 - Merged in ext-colors (https://github.com/MGardne8/DiscordPyColours)
 - Using Rapptz/discord.py/tree/neo-docs for documentation
-- Adding support for ``hex()`` to ``discord.Color``
+- Added support for ``hex()`` to ``discord.Color``
 - Added ``Client.embed_color`` / ``Bot.embed_color``
 - Added ``Client.set_embed_color`` / ``Bot.set_embed_color``
 - Added ``TextChannel.can_send``
 - Added ``Intents.from_list``
+- Added support for ``int()`` to ``discord.User``, ``discord.Member``, ``discord.Emoji``, ``discord.Role``, ``discord.Guild``, ``discord.Message``, ``discord.TextChannel``, ``discord.VoiceChannel``, ``discord.CategoryChannel``, ``discord.Attachment`` and ``discord.Message``. This will return their id
+- Added support for ``str()`` to ``discord.Message``. This will return the message content
 
 Key Features
 -------------

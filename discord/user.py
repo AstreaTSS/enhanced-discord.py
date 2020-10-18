@@ -92,6 +92,9 @@ class BaseUser(_BaseUser):
     def __str__(self):
         return '{0.name}#{0.discriminator}'.format(self)
 
+    def __int__(self):
+        return self.id
+
     def __eq__(self, other):
         return isinstance(other, _BaseUser) and other.id == self.id
 

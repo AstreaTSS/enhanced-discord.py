@@ -30,6 +30,7 @@ Custom Features
 - Added ``Client.set_embed_color`` / ``Bot.set_embed_color``
 - Added ``TextChannel.can_send``
 - Added ``Intents.from_list``
+- Added support for ``int()`` to ``discord.User``, ``discord.Member``, ``discord.Emoji``, ``discord.Role``, ``discord.Guild``, ``discord.Message``, ``discord.TextChannel``, ``discord.VoiceChannel``, ``discord.CategoryChannel``, ``discord.Attachment`` and ``discord.Message``. This will return their id
 - Added support for ``str()`` to ``discord.Message``. This will return the message content
 
 Features
