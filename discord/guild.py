@@ -1302,7 +1302,7 @@ class Guild(Hashable):
 
         Retreives a :class:`Member` from a guild ID, and a member ID.
 
-        .. versionadded:: 1.5.1.2
+        .. versionadded:: 1.5.0.2
 
         .. note::
 
