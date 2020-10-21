@@ -144,7 +144,9 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
 
     @property
     def can_send(self):
-        """:class:`bool`: Checks if the bot can send messages"""
+        """:class:`bool`: Checks if the bot can send messages
+
+        .. versionadded:: 1.5.0.1"""
         return self.guild.me.guild_permissions.send_messages
 
     def permissions_for(self, member):

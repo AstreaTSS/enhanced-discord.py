@@ -226,6 +226,8 @@ class Client:
         remove the need to set the color per embed, but can still be overridden by setting a
         color while creating an instance of an embed.
 
+        .. versionadded:: 1.5.0.1
+
     Attributes
     -----------
     ws
@@ -293,6 +295,8 @@ class Client:
         """Set a new default embed color.
 
         This will raise a TypeError if an improper format was passed.
+
+        .. versionadded:: 1.5.0.1
 
         Parameters
         -----------
@@ -1409,6 +1413,8 @@ class Client:
 
         Retrieves a :class:`~discord.User` based on their ID. This can only
         be used by bot accounts. 
+
+        .. versionadded:: 1.5.0.1
 
         .. note::
 

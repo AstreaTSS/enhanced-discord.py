@@ -128,14 +128,18 @@ class BotBase(GroupMixin):
             
     @property
     def owner(self):
-        """:class:`discord.User`: The owner, retrieved from owner_id. In case of improper caching, this can return None"""
+        """:class:`discord.User`: The owner, retrieved from owner_id. In case of improper caching, this can return None
+
+        .. versionadded:: 1.5.0.1"""
         if not self.owner_id or self.owner_ids:
             raise AttributeError('No owner_id specified or you used owner_ids. If you used owner_ids, please refer to `Bot.owners`')
         return self.get_user(self.owner_id)
 
     @property
     def owners(self):
-        """List[:class:`discord.User`]: The owners, retrieved from owner_ids. In case of improper caching, this list may not contain all owners."""
+        """List[:class:`discord.User`]: The owners, retrieved from owner_ids. In case of improper caching, this list may not contain all owners.
+
+        .. versionadded:: 1.5.0.1"""
         if not self.owner_ids or self.owner_id:
             raise TypeError('No owner_ids specified or you used owner_id. If you used owner_id, please refer to `Bot.owner`')
         owners = []

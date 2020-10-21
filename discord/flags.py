@@ -405,7 +405,9 @@ class Intents(BaseFlags):
     @classmethod
     def from_list(cls, intents_list):
         """A factory method that creates a :class:`Intents` with everything enabled
-        that has been passed in the list."""
+        that has been passed in the list.
+
+        .. versionadded:: 1.5.0.1"""
         for item in intents_list:
             if item not in cls.VALID_FLAGS.keys():
                 intents_list.remove(item)

@@ -520,12 +520,16 @@ class Guild(Hashable):
 
     @property
     def bots(self):
-        """List[:class:`Member`]: A list of bots that belong to this guild."""
+        """List[:class:`Member`]: A list of bots that belong to this guild.
+
+        .. versionadded:: 1.5.0.1"""
         return list(m for m in self._members.values() if m.bot)
 
     @property
     def humans(self):
-        """List[:class:`Member`]: A list of humans that belong to this guild."""
+        """List[:class:`Member`]: A list of humans that belong to this guild.
+
+        .. versionadded:: 1.5.0.1"""
         return list(m for m in self._members.values() if not m.bot)
 
     def get_member(self, user_id):
@@ -1292,6 +1296,42 @@ class Guild(Hashable):
             # members is now a list of Member...
         """
         return MemberIterator(self, limit=limit, after=after)
+
+    async def try_member(self, member_id):
+        """|coro|
+
+        Retreives a :class:`Member` from a guild ID, and a member ID.
+
+        .. versionadded:: 1.5.1.2
+
+        .. note::
+
+            This will first attempt to get the member from the cache.
+            If that fails, it will make an API call.
+            This method is an API call. For general usage, consider :meth:`get_member` instead.
+
+        Parameters
+        -----------
+        member_id: :class:`int`
+            The member's ID to fetch from.
+
+        Raises
+        -------
+        Forbidden
+            You do not have access to the guild.
+        HTTPException
+            Fetching the member failed.
+
+        Returns
+        --------
+        :class:`Member`
+            The member from the member ID.
+        """
+
+        member = self.get_member(member_id)
+        if member is None:
+            member = await self.fetch_member(member_id)
+        return member
 
     async def fetch_member(self, member_id):
         """|coro|
