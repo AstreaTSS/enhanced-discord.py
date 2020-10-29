@@ -87,7 +87,9 @@ class Context(discord.abc.Messageable):
 
     @property
     def clean_prefix(self):
-        """:class:`str`: The cleaned up invoke prefix. i.e. mentions are ``@name`` instead of ``<@id>``."""
+        """:class:`str`: The cleaned up invoke prefix. i.e. mentions are ``@name`` instead of ``<@id>``.
+        
+        .. versionadded:: 1.5.1.4"""
         user = self.guild.me if self.guild else self.bot.user
         pattern = re.compile(r"<@!?%s>" % user.id)
         return pattern.sub("@%s" % user.display_name.replace('\\', r'\\'), self.prefix)
