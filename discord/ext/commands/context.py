@@ -23,10 +23,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+import re 
 
 import discord.abc
 import discord.utils
-import re
 
 class Context(discord.abc.Messageable):
     r"""Represents the context in which a command is being invoked under.
@@ -51,6 +51,8 @@ class Context(discord.abc.Messageable):
         A dictionary of transformed arguments that were passed into the command.
         Similar to :attr:`args`\, if this is accessed in the
         :func:`on_command_error` event then this dict could be incomplete.
+    prefix: :class:`str`
+        The prefix that was used to invoke the command.
     command: :class:`Command`
         The command that is being invoked currently.
     invoked_with: :class:`str`
@@ -74,7 +76,7 @@ class Context(discord.abc.Messageable):
         self.bot = attrs.pop('bot', None)
         self.args = attrs.pop('args', [])
         self.kwargs = attrs.pop('kwargs', {})
-        self._prefix = attrs.pop('prefix')
+        self.prefix = attrs.pop('prefix')
         self.command = attrs.pop('command', None)
         self.view = attrs.pop('view', None)
         self.invoked_with = attrs.pop('invoked_with', None)
@@ -84,11 +86,11 @@ class Context(discord.abc.Messageable):
         self._state = self.message._state
 
     @property
-    def prefix(self):
+    def clean_prefix(self):
         """:class:`str`: The cleaned up invoke prefix. i.e. mentions are ``@name`` instead of ``<@id>``."""
         user = self.guild.me if self.guild else self.bot.user
         pattern = re.compile(r"<@!?%s>" % user.id)
-        return pattern.sub("@%s" % user.display_name.replace('\\', r'\\'), self._prefix)
+        return pattern.sub("@%s" % user.display_name.replace('\\', r'\\'), self.prefix)
 
     async def invoke(self, *args, **kwargs):
         r"""|coro|
