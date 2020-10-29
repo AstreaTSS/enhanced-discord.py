@@ -611,7 +611,7 @@ class Intents(BaseFlags):
         """
         return 1 << 8
 
-    @flag_value
+    @alias_flag_value
     def messages(self):
         """:class:`bool`: Whether guild and direct message related events are enabled.
 
@@ -694,7 +694,7 @@ class Intents(BaseFlags):
         """
         return 1 << 12
 
-    @flag_value
+    @alias_flag_value
     def reactions(self):
         """:class:`bool`: Whether guild and direct message reaction related events are enabled.
 
@@ -757,7 +757,7 @@ class Intents(BaseFlags):
         """
         return 1 << 13
 
-    @flag_value
+    @alias_flag_value
     def typing(self):
         """:class:`bool`: Whether guild and direct message typing related events are enabled.
 

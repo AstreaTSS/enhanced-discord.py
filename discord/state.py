@@ -58,13 +58,14 @@ from .object import Object
 from .invite import Invite
 
 class ChunkRequest:
-    def __init__(self, guild_id, future, resolver, *, cache=True):
+    def __init__(self, guild_id, loop, resolver, *, cache=True):
         self.guild_id = guild_id
         self.resolver = resolver
+        self.loop = loop
         self.cache = cache
         self.nonce = os.urandom(16).hex()
-        self.future = future
         self.buffer = [] # List[Member]
+        self.waiters = []
 
     def add_members(self, members):
         self.buffer.extend(members)
@@ -78,8 +79,23 @@ class ChunkRequest:
                 if existing is None or existing.joined_at is None:
                     guild._add_member(member)
 
+    async def wait(self):
+        future = self.loop.create_future()
+        self.waiters.append(future)
+        try:
+            return await future
+        finally:
+            self.waiters.remove(future)
+
+    def get_future(self):
+        future = self.loop.create_future()
+        self.waiters.append(future)
+        return future
+
     def done(self):
-        self.future.set_result(self.buffer)
+        for future in self.waiters:
+            if not future.done():
+                future.set_result(self.buffer)
 
 log = logging.getLogger(__name__)
 
@@ -116,7 +132,7 @@ class ConnectionState:
             raise TypeError('allowed_mentions parameter must be AllowedMentions')
 
         self.allowed_mentions = allowed_mentions
-        self._chunk_requests = []
+        self._chunk_requests = {} # Dict[Union[int, str], ChunkRequest]
 
         activity = options.get('activity', None)
         if activity:
@@ -198,20 +214,15 @@ class ConnectionState:
 
     def process_chunk_requests(self, guild_id, nonce, members, complete):
         removed = []
-        for i, request in enumerate(self._chunk_requests):
-            future = request.future
-            if future.cancelled():
-                removed.append(i)
-                continue
-
+        for key, request in self._chunk_requests.items():
             if request.guild_id == guild_id and request.nonce == nonce:
                 request.add_members(members)
                 if complete:
                     request.done()
-                    removed.append(i)
+                    removed.append(key)
 
-        for index in reversed(removed):
-            del self._chunk_requests[index]
+        for key in removed:
+            del self._chunk_requests[key]
 
     def call_handlers(self, key, *args, **kwargs):
         try:
@@ -377,14 +388,13 @@ class ConnectionState:
         if ws is None:
             raise RuntimeError('Somehow do not have a websocket for this guild_id')
 
-        future = self.loop.create_future()
-        request = ChunkRequest(guild.id, future, self._get_guild, cache=cache)
-        self._chunk_requests.append(request)
+        request = ChunkRequest(guild.id, self.loop, self._get_guild, cache=cache)
+        self._chunk_requests[request.nonce] = request
 
         try:
             # start the query operation
             await ws.request_chunks(guild_id, query=query, limit=limit, user_ids=user_ids, nonce=request.nonce)
-            return await asyncio.wait_for(future, timeout=30.0)
+            return await asyncio.wait_for(request.wait(), timeout=30.0)
         except asyncio.TimeoutError:
             log.warning('Timed out waiting for chunks with query %r and limit %d for guild_id %d', query, limit, guild_id)
             raise
@@ -610,7 +620,7 @@ class ConnectionState:
             if user_update:
                 self.dispatch('user_update', user_update[0], user_update[1])
 
-            if flags._online_only and member.raw_status == 'offline':
+            if member.id != self.self_id and flags._online_only and member.raw_status == 'offline':
                 guild._remove_member(member)
 
         self.dispatch('member_update', old_member, member)
@@ -776,6 +786,9 @@ class ConnectionState:
 
             self.dispatch('member_update', old_member, member)
         else:
+            if self._member_cache_flags.joined:
+                member = Member(data=data, guild=guild, state=self)
+                guild._add_member(member)
             log.debug('GUILD_MEMBER_UPDATE referencing an unknown member ID: %s. Discarding.', user_id)
 
     def parse_guild_emojis_update(self, data):
@@ -805,13 +818,14 @@ class ConnectionState:
 
     async def chunk_guild(self, guild, *, wait=True, cache=None):
         cache = cache or self._member_cache_flags.joined
-        future = self.loop.create_future()
-        request = ChunkRequest(guild.id, future, self._get_guild, cache=cache)
-        self._chunk_requests.append(request)
-        await self.chunker(guild.id, nonce=request.nonce)
+        request = self._chunk_requests.get(guild.id)
+        if request is None:
+            self._chunk_requests[guild.id] = request = ChunkRequest(guild.id, self.loop, self._get_guild, cache=cache)
+            await self.chunker(guild.id, nonce=request.nonce)
+
         if wait:
-            return await request.future
-        return request.future
+            return await request.wait()
+        return request.get_future()
 
     async def _chunk_and_dispatch(self, guild, unavailable):
         try:
@@ -971,8 +985,9 @@ class ConnectionState:
         guild = self._get_guild(utils._get_as_snowflake(data, 'guild_id'))
         channel_id = utils._get_as_snowflake(data, 'channel_id')
         flags = self._member_cache_flags
+        self_id = self.user.id
         if guild is not None:
-            if int(data['user_id']) == self.user.id:
+            if int(data['user_id']) == self_id:
                 voice = self._get_voice_client(guild.id)
                 if voice is not None:
                     coro = voice.on_voice_state_update(data)
@@ -981,10 +996,10 @@ class ConnectionState:
             member, before, after = guild._update_voice_state(data, channel_id)
             if member is not None:
                 if flags.voice:
-                    if channel_id is None and flags.value == MemberCacheFlags.voice.flag:
+                    if channel_id is None and flags._voice_only and member.id != self_id:
                         # Only remove from cache iff we only have the voice flag enabled
                         guild._remove_member(member)
-                    else:
+                    elif channel_id is not None:
                         guild._add_member(member)
 
                 self.dispatch('voice_state_update', member, before, after)
@@ -1125,7 +1140,7 @@ class AutoShardedConnectionState(ConnectionState):
                             await utils.sane_wait_for(current_bucket, timeout=max_concurrency * 70.0)
                         except asyncio.TimeoutError:
                             fmt = 'Shard ID %s failed to wait for chunks from a sub-bucket with length %d'
-                            log.warning(fmt, self.shard_id, len(current_bucket))
+                            log.warning(fmt, guild.shard_id, len(current_bucket))
                         finally:
                             current_bucket = []
 
@@ -1146,7 +1161,7 @@ class AutoShardedConnectionState(ConnectionState):
             try:
                 await utils.sane_wait_for(futures, timeout=timeout)
             except asyncio.TimeoutError:
-                log.warning('Shard ID %s failed to wait for chunks (timeout=%.2f) for %d guilds', self.shard_id,
+                log.warning('Shard ID %s failed to wait for chunks (timeout=%.2f) for %d guilds', shard_id,
                                                                                                   timeout,
                                                                                                   len(guilds))
             for guild in children:

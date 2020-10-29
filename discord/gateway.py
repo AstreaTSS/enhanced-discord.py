@@ -76,6 +76,12 @@ class GatewayRatelimiter:
         self.lock = asyncio.Lock()
         self.shard_id = None
 
+    def is_ratelimited(self):
+        current = time.time()
+        if current > self.window + self.per:
+            return False
+        return self.remaining == 0
+
     def get_delay(self):
         current = time.time()
 
@@ -286,6 +292,9 @@ class DiscordWebSocket:
     @property
     def open(self):
         return not self.socket.closed
+
+    def is_ratelimited(self):
+        return self._rate_limiter.is_ratelimited()
 
     @classmethod
     async def from_client(cls, client, *, initial=False, gateway=None, shard_id=None, session=None, sequence=None, resume=False):
@@ -719,6 +728,7 @@ class DiscordVoiceWebSocket:
         self.loop = loop
         self._keep_alive = None
         self._close_code = None
+        self.secret_key = None
 
     async def send_as_json(self, data):
         log.debug('Sending voice websocket frame: %s.', data)
@@ -872,7 +882,7 @@ class DiscordVoiceWebSocket:
 
     async def load_secret_key(self, data):
         log.info('received secret key for voice connection')
-        self._connection.secret_key = data.get('secret_key')
+        self.secret_key = self._connection.secret_key = data.get('secret_key')
         await self.speak()
         await self.speak(False)
 
