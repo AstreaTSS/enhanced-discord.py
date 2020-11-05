@@ -337,6 +337,13 @@ class Colour:
         return cls(0xff7043)
 
     @classmethod
+    def nitro_booster(cls):
+        """A factory method that returns a :class:`Colour` with a value of ``0xf47fff``.
+
+        .. versionadded:: 1.5.1.5"""
+        return cls(0xf47fff)
+
+    @classmethod
     def rust(cls):
         """A factory method that returns a :class:`Colour` with a value of ``0xa83c09``."""
         return cls(0xa83c09)

@@ -34,6 +34,7 @@ Custom Features
 - Added support for ``str()`` to ``discord.Message``. This will return the message content
 - Added ``Guild.try_member``
 - Added ``Context.clean_prefix``
+- Added ``Color.nitro_booster``
 
 Features
 --------
