@@ -214,7 +214,7 @@ class UserConverter(IDConverter):
 
         if match is not None:
             user_id = int(match.group(1))
-            result = ctx.bot.get_user(user_id) or _utils_get(ctx.message.mentions, id=user_id)
+            result = await ctx.bot.try_user(user_id) or _utils_get(ctx.message.mentions, id=user_id)
         else:
             arg = argument
 
