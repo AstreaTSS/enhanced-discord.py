@@ -27,7 +27,7 @@ New Beta Features
 
 These are all for message replies. I have added them to 1.5.1.5 but they will most likely officially get added in the original lib in 1.6 or 2.0
 
-- Add |commands| :meth:`Context.reply`
+- Add |commands| :meth:`Context.reply <ext.commands.Context>`
 - Add :meth:`Message.reply`
 - Add ``replied_user`` to :class:`AllowedMentions`
 - Add :meth:`MessageReference.to_dict`
@@ -43,7 +43,6 @@ New Features
 ~~~~~~~~~~~~~~
 
 - Add :attr:`Context.clean_prefix`
-- Fix :attr:`TextChannel.can_send` to use proper checks
 
 .. _vp1p5p1:
 
@@ -70,6 +69,16 @@ Miscellaneous
     - This is the same as having ``discord.Member`` as the type-hint.
 - :meth:`Guild.chunk` now allows concurrent calls without spamming the gateway with requests.
 
+.. _v1p5p0p3:
+
+v1.5.0.3
+--------
+
+Bug Fixes
+~~~~~~~~~~~
+
+- Fix :attr:`TextChannel.can_send` to use proper checks
+
 .. _vp1p5p0p2:
 
 v1.5.0.2
@@ -95,8 +104,8 @@ New Features
 - Add support for ``hex()`` to :class:`Color`
 - Add :attr:`Guild.bots`
 - Add :attr:`Guild.humans`
-- |commands| Add :attr:`Bot.owner`
-- |commands| Add :attr:`Bot.owners`
+- |commands| Add :attr:`Bot.owner <ext.commands.Bot>`
+- |commands| Add :attr:`Bot.owners <ext.commands.Bot>`
 - Add :attr:`Guild.humans`
 - Add :meth:`Client.try_user`
 - Add :attr:`Client.embed_color`
