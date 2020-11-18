@@ -11,6 +11,40 @@ Changelog
 This page keeps a detailed human friendly rendering of what's new and changed
 in specific versions.
 
+.. _vp1p5p1p5:
+
+v1.5.1.5
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Add :meth:`Color.nitro_booster`
+- Add :attr:`Permissions.admin` as alias to :attr:`Permissions.administrator`
+
+New Beta Features
+~~~~~~~~~~~~~~~~~~~
+
+These are all for message replies. I have added them to 1.5.1.5 but they will most likely officially get added in the original lib in 1.6 or 2.0
+
+- Add |commands| :meth:`Context.reply`
+- Add :meth:`Message.reply`
+- Add ``replied_user`` to :class:`AllowedMentions`
+- Add :meth:`MessageReference.to_dict`
+- Add :meth:`MessageReference.from_message`
+- Add ``message_refernce`` kwarg to :meth:`abc.Messageable.send`
+
+.. _vp1p5p1p4:
+
+v1.5.1.4
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Add :attr:`Context.clean_prefix`
+- Fix :attr:`TextChannel.can_send` to use proper checks
+
 .. _vp1p5p1:
 
 v1.5.1
@@ -35,6 +69,42 @@ Miscellaneous
 - |commands| :class:`MemberConverter <ext.commands.MemberConverter>` now properly lazily fetches members if not available from cache.
     - This is the same as having ``discord.Member`` as the type-hint.
 - :meth:`Guild.chunk` now allows concurrent calls without spamming the gateway with requests.
+
+.. _vp1p5p0p2:
+
+v1.5.0.2
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Add :attr:`Guild.try_member`
+- Add :attr:`TextChannel.can_send`
+
+.. _vp1p5p0p1:
+
+v1.5.0.1
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Changed :attr:`Guild.icon_url` and :attr:`User.avatar_url` to return a string of the url in stead of an :class:`Asset`
+- Documentation uses `Neo Docs by Rapptz <Rapptz/discord.py/tree/neo-docs>`_
+- Add 1000+ colors from `ext colors <https://github.com/MGardne8/DiscordPyColours>`_
+- Add support for ``hex()`` to :class:`Color`
+- Add :attr:`Guild.bots`
+- Add :attr:`Guild.humans`
+- |commands| Add :attr:`Bot.owner`
+- |commands| Add :attr:`Bot.owners`
+- Add :attr:`Guild.humans`
+- Add :meth:`Client.try_user`
+- Add :attr:`Client.embed_color`
+- Add :meth:`Client.set_embed_color`
+- Add :meth:`Intents.from_list`
+- Add ``str()`` support to :class:`Message` which will return the :attr:`Message.content`
+- Add ``int()`` support to :class:`User`, :class:`Member`,:class:`Emoji`, :class:`Role`, :class:`Guild`, :class:`Message`, :class:`TextChannel`, :class:`VoiceChannel`, :class:`CategoryChannel`, :class:`Attachment` and :class:`Message`. This will return the ID of the object
+
 
 .. _vp1p5p0:
 

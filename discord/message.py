@@ -235,6 +235,24 @@ class MessageReference:
         self.guild_id = utils._get_as_snowflake(kwargs, 'guild_id')
         self._state = state
 
+    @classmethod 
+    def from_message(cls, message): 
+        """Creates a :class:`MessageReference` from an existing :class:`Message` 
+ 
+        .. versionadded:: 1.5.1.5
+ 
+        Parameters 
+        ---------- 
+        message: :class:`Message` 
+            The message to be converted into a reference. 
+ 
+        Returns 
+        ------- 
+        :class:`MessageReference` 
+            A reference to the message 
+        """ 
+        return cls(message._state, message_id=message.id, channel_id=message.channel.id, guild_id=message.guild and message.guild.id)
+
     @property
     def cached_message(self):
         """Optional[:class:`Message`]: The cached message, if found in the internal message cache."""
@@ -242,6 +260,29 @@ class MessageReference:
 
     def __repr__(self):
         return '<MessageReference message_id={0.message_id!r} channel_id={0.channel_id!r} guild_id={0.guild_id!r}>'.format(self)
+
+    def to_dict(self, specify_channel=False): 
+        """Converts the message reference to a dict, for transmission via the gateway. 
+ 
+        .. versionadded:: 1.5.1.5
+ 
+        Parameters 
+        ------- 
+        specify_channel: Optional[:class:`bool`] 
+            Whether to include the channel ID in the returned object. 
+            Defaults to False. 
+
+        Returns 
+        ------- 
+        :class:`dict` 
+            The reference as a dict. 
+        """ 
+        result = {'message_id': self.message_id} if self.message_id is not None else {} 
+        if specify_channel: 
+            result['channel_id'] = self.channel_id 
+        if self.guild_id is not None: 
+            result['guild_id'] = self.guild_id 
+        return result
 
 def flatten_handlers(cls):
     prefix = len('_handle_')
@@ -288,8 +329,8 @@ class Message(Hashable):
         :attr:`MessageType.call`.
     reference: Optional[:class:`MessageReference`]
         The message that this message references. This is only applicable to messages of
-        type :attr:`MessageType.pins_add` or crossposted messages created by a
-        followed channel integration.
+        type :attr:`MessageType.pins_add`, crossposted messages created by a
+        followed channel integration or message replies.
 
         .. versionadded:: 1.5
 
@@ -1123,3 +1164,29 @@ class Message(Hashable):
         if state.is_bot:
             raise ClientException('Must not be a bot account to ack messages.')
         return await state.http.ack_message(self.channel.id, self.id)
+
+    async def reply(self, content=None, **kwargs):
+        """|coro|
+        A shortcut method to :meth:`abc.Messageable.send` to reply to the 
+        :class:`Message`. 
+ 
+            .. versionadded:: 1.5.1.5
+ 
+        Raises 
+        -------- 
+        ~discord.HTTPException 
+            Sending the message failed. 
+        ~discord.Forbidden 
+            You do not have the proper permissions to send the message. 
+        ~discord.InvalidArgument 
+            The ``files`` list is not of the appropriate size or 
+            you specified both ``file`` and ``files``. 
+ 
+        Returns 
+        --------- 
+        :class:`Message` 
+            The message that was sent. 
+        """ 
+
+        reference = MessageReference.from_message(self) 
+        return await self.channel.send(content, message_reference=reference, **kwargs)
