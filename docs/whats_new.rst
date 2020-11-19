@@ -32,7 +32,7 @@ These are all for message replies. I have added them to 1.5.1.5 but they will mo
 - Add ``replied_user`` to :class:`AllowedMentions`
 - Add :meth:`MessageReference.to_dict`
 - Add :meth:`MessageReference.from_message`
-- Add ``message_refernce`` kwarg to :meth:`abc.Messageable.send`
+- Add ``message_reference`` kwarg to :meth:`abc.Messageable.send`
 
 .. _vp1p5p1p4:
 
