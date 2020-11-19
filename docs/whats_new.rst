@@ -19,7 +19,7 @@ v1.5.1.5
 New Features
 ~~~~~~~~~~~~~~
 
-- Add :meth:`Color.nitro_booster`
+- Add :meth:`Colour.nitro_booster`
 - Add :attr:`Permissions.admin` as alias to :attr:`Permissions.administrator`
 
 New Beta Features
@@ -27,7 +27,7 @@ New Beta Features
 
 These are all for message replies. I have added them to 1.5.1.5 but they will most likely officially get added in the original lib in 1.6 or 2.0
 
-- Add |commands| :meth:`Context.reply <ext.commands.Context>`
+- |commands| Add :meth:`Context.reply <ext.commands.Context>`
 - Add :meth:`Message.reply`
 - Add ``replied_user`` to :class:`AllowedMentions`
 - Add :meth:`MessageReference.to_dict`
@@ -42,7 +42,7 @@ v1.5.1.4
 New Features
 ~~~~~~~~~~~~~~
 
-- Add :attr:`Context.clean_prefix`
+- |commands| Add :attr:`Context.clean_prefix <ext.commands.Context>`
 
 .. _vp1p5p1:
 
@@ -112,7 +112,7 @@ New Features
 - Add :meth:`Client.set_embed_color`
 - Add :meth:`Intents.from_list`
 - Add ``str()`` support to :class:`Message` which will return the :attr:`Message.content`
-- Add ``int()`` support to :class:`User`, :class:`Member`,:class:`Emoji`, :class:`Role`, :class:`Guild`, :class:`Message`, :class:`TextChannel`, :class:`VoiceChannel`, :class:`CategoryChannel`, :class:`Attachment` and :class:`Message`. This will return the ID of the object
+- Add ``int()`` support to :class:`User`, :class:`Member`, :class:`Emoji`, :class:`Role`, :class:`Guild`, :class:`Message`, :class:`TextChannel`, :class:`VoiceChannel`, :class:`CategoryChannel`, :class:`Attachment` and :class:`Message`. This will return the ID of the object
 
 
 .. _vp1p5p0:
