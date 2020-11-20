@@ -11,6 +11,16 @@ Changelog
 This page keeps a detailed human friendly rendering of what's new and changed
 in specific versions.
 
+.. _vp1p5p1p6:
+
+v1.5.1.6
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Add :meth:`Colour.random`
+
 .. _vp1p5p1p5:
 
 v1.5.1.5
