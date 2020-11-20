@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import colorsys
+import random
 
 class Colour:
     """Represents a Discord role colour. This class is similar
@@ -117,6 +118,11 @@ class Colour:
         """Constructs a :class:`Colour` from an HSV tuple."""
         rgb = colorsys.hsv_to_rgb(h, s, v)
         return cls.from_rgb(*(int(x * 255) for x in rgb))
+
+    @classmethod
+    def random(cls):
+        """A factory method that returns a :class:`Colour` with a random value."""
+        return cls.from_hsv(random.random(), 1, 1)
 
     @classmethod
     def default(cls):

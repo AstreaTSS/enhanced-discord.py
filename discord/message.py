@@ -237,7 +237,7 @@ class MessageReference:
 
     @classmethod 
     def from_message(cls, message): 
-        """Creates a :class:`MessageReference` from an existing :class:`Message` 
+        """Creates a :class:`MessageReference` from an existing :class:`Message`.
  
         .. versionadded:: 1.5.1.5
  
@@ -249,7 +249,7 @@ class MessageReference:
         Returns 
         ------- 
         :class:`MessageReference` 
-            A reference to the message 
+            A reference to the message.
         """ 
         return cls(message._state, message_id=message.id, channel_id=message.channel.id, guild_id=message.guild and message.guild.id)
 
