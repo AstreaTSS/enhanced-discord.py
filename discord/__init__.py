@@ -15,7 +15,7 @@ __title__ = 'discord'
 __author__ = 'Rapptz'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2015-2020 Rapptz'
-__version__ = '1.5.1.6'
+__version__ = '1.6.0.6a'
 
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
@@ -58,10 +58,11 @@ from .voice_client import VoiceClient, VoiceProtocol
 from .audit_logs import AuditLogChanges, AuditLogEntry, AuditLogDiff
 from .raw_models import *
 from .team import *
+from .sticker import Sticker
 
 VersionInfo = namedtuple('VersionInfo', 'major minor micro releaselevel serial')
 
-version_info = VersionInfo(major=1, minor=5, micro=1, releaselevel='final', serial=0)
+version_info = VersionInfo(major=1, minor=6, micro=0, releaselevel='alpha', serial=0)
 
 try:
     from logging import NullHandler

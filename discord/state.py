@@ -181,10 +181,13 @@ class ConnectionState:
 
             cache_flags._verify_intents(intents)
 
-        self._member_cache_flags = cache_flags
+        self.member_cache_flags = cache_flags
         self._activity = activity
         self._status = status
         self._intents = intents
+
+        if not intents.members or cache_flags._empty:
+            self.store_user = self.store_user_no_intents
 
         self.parsers = parsers = {}
         for attr, func in inspect.getmembers(self):
@@ -278,6 +281,9 @@ class ConnectionState:
             if user.discriminator != '0000':
                 self._users[user_id] = user
             return user
+
+    def store_user_no_intents(self, data):
+        return User(state=self, data=data)
 
     def get_user(self, id):
         return self._users.get(id)
@@ -520,6 +526,9 @@ class ConnectionState:
             raw.cached_message = older_message
             self.dispatch('raw_message_edit', raw)
             message._update(data)
+            # Coerce the `after` parameter to take the new updated Member
+            # ref: #5999
+            older_message.author = message.author
             self.dispatch('message_edit', older_message, message)
         else:
             self.dispatch('raw_message_edit', raw)
@@ -604,7 +613,7 @@ class ConnectionState:
         user = data['user']
         member_id = int(user['id'])
         member = guild.get_member(member_id)
-        flags = self._member_cache_flags
+        flags = self.member_cache_flags
         if member is None:
             if 'username' not in user:
                 # sometimes we receive 'incomplete' member data post-removal.
@@ -742,7 +751,7 @@ class ConnectionState:
             return
 
         member = Member(guild=guild, data=data, state=self)
-        if self._member_cache_flags.joined:
+        if self.member_cache_flags.joined:
             guild._add_member(member)
 
         try:
@@ -786,7 +795,7 @@ class ConnectionState:
 
             self.dispatch('member_update', old_member, member)
         else:
-            if self._member_cache_flags.joined:
+            if self.member_cache_flags.joined:
                 member = Member(data=data, guild=guild, state=self)
                 guild._add_member(member)
             log.debug('GUILD_MEMBER_UPDATE referencing an unknown member ID: %s. Discarding.', user_id)
@@ -817,7 +826,7 @@ class ConnectionState:
         return self._add_guild_from_data(data)
 
     async def chunk_guild(self, guild, *, wait=True, cache=None):
-        cache = cache or self._member_cache_flags.joined
+        cache = cache or self.member_cache_flags.joined
         request = self._chunk_requests.get(guild.id)
         if request is None:
             self._chunk_requests[guild.id] = request = ChunkRequest(guild.id, self.loop, self._get_guild, cache=cache)
@@ -984,7 +993,7 @@ class ConnectionState:
     def parse_voice_state_update(self, data):
         guild = self._get_guild(utils._get_as_snowflake(data, 'guild_id'))
         channel_id = utils._get_as_snowflake(data, 'channel_id')
-        flags = self._member_cache_flags
+        flags = self.member_cache_flags
         self_id = self.user.id
         if guild is not None:
             if int(data['user_id']) == self_id:

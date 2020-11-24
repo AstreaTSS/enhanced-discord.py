@@ -2053,6 +2053,23 @@ of :class:`enum.Enum`.
         Represents the default avatar with the color red.
         See also :attr:`Colour.red`
 
+.. class:: StickerType
+
+    Represents the type of sticker images.
+
+    .. versionadded:: 1.6
+
+    .. attribute:: png
+
+        Represents a sticker with a png image.
+
+    .. attribute:: apng
+
+        Represents a sticker with an apng image.
+
+    .. attribute:: lottie
+
+        Represents a sticker with a lottie image.
 
 Async Iterator
 ----------------
@@ -2976,6 +2993,12 @@ Widget
 .. autoclass:: Widget()
     :members:
 
+Sticker
+~~~~~~~~~~~~~~~
+
+.. autoclass:: Sticker()
+    :members:
+
 MessageReference
 ~~~~~~~~~~~~~~~~~
 .. autoclass:: MessageReference()
@@ -3176,7 +3199,6 @@ PublicUserFlags
 
 .. autoclass:: PublicUserFlags()
     :members:
-
 
 Exceptions
 ------------

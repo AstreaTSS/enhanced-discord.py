@@ -713,7 +713,7 @@ class GuildChannel:
     async def create_invite(self, *, reason=None, **fields):
         """|coro|
 
-        Creates an instant invite.
+        Creates an instant invite from a text or voice channel.
 
         You must have the :attr:`~Permissions.create_instant_invite` permission to
         do this.
@@ -740,6 +740,9 @@ class GuildChannel:
         -------
         ~discord.HTTPException
             Invite creation failed.
+
+        ~discord.NotFound
+            The channel that was passed is a category or an invalid channel.
 
         Returns
         --------
