@@ -122,7 +122,7 @@ class Colour:
     @classmethod
     def random(cls):
         """A factory method that returns a :class:`Colour` with a random value."""
-        return cls.from_hsv(random.random(), 1, 1)
+        return cls(random.randint(0x000000,0xffffff))
 
     @classmethod
     def default(cls):
