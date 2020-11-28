@@ -8,7 +8,7 @@ enhanced-dpy was made to add some extra features that make it just a bit easier.
 
 Custom Features
 ---------------
-Here are the custom features listed that have been added to enhanced-dpy. You can refer o the changelog to see in what version they were added!
+Here are the custom features listed that have been added to enhanced-dpy. You can refer to the changelog to see in what version they were added!
 
 - **Documentation URL:** https://enhanced-dpy.readthedocs.io/en/latest/index.html
 - Added ``Guild.bots`` / ``Guild.humans``
