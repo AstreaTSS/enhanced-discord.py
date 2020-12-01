@@ -121,26 +121,15 @@ class Colour:
 
     @classmethod
     def random(cls):
-        """A factory method that returns a :class:`Colour` with a random value."""
+        """A factory method that returns a :class:`Colour` with a random value.
+        
+        .. versionadded:: 1.6"""
         return cls(random.randint(0x000000,0xffffff))
 
     @classmethod
     def default(cls):
         """A factory method that returns a :class:`Colour` with a value of ``0``."""
         return cls(0)
-
-    @classmethod
-    def random(cls):
-        """A factory method that returns a :class:`Colour` with a random hue.
-
-        .. note::
-
-            The random algorithm works by choosing a colour with a random hue but
-            with maxed out saturation and value.
-
-        .. versionadded:: 1.6
-        """
-        return cls.from_hsv(random.random(), 1, 1)
 
     @classmethod
     def teal(cls):
