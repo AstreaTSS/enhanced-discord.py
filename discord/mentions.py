@@ -59,11 +59,11 @@ class AllowedMentions:
         roles are not mentioned at all. If a list of :class:`abc.Snowflake`
         is given then only the roles provided will be mentioned, provided those
         roles are in the message content.
-    replied_user: :class:`bool` 
-        Whether to mention the author of the message being replied to. Defaults 
-        to ``True``. 
+    replied_user: :class:`bool`
+        Whether to mention the author of the message being replied to. Defaults
+        to ``True``.
 
-        .. versionadded:: 1.5.1.5
+        .. versionadded:: 1.6
     """
 
     __slots__ = ('everyone', 'users', 'roles', 'replied_user')
@@ -107,7 +107,7 @@ class AllowedMentions:
         elif self.roles != False:
             data['roles'] = [x.id for x in self.roles]
 
-        if self.replied_user == True: 
+        if self.replied_user:
             data['replied_user'] = True
 
         data['parse'] = parse

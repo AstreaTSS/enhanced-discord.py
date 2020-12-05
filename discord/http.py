@@ -361,7 +361,7 @@ class HTTPClient:
         if allowed_mentions:
             payload['allowed_mentions'] = allowed_mentions
 
-        if message_reference: 
+        if message_reference:
             payload['message_reference'] = message_reference
 
         return self.request(r, json=payload)
@@ -382,7 +382,7 @@ class HTTPClient:
             payload['nonce'] = nonce
         if allowed_mentions:
             payload['allowed_mentions'] = allowed_mentions
-        if message_reference: 
+        if message_reference:
             payload['message_reference'] = message_reference
 
         form.add_field('payload_json', utils.to_json(payload))

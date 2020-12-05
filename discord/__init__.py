@@ -33,12 +33,12 @@ from .guild import Guild
 from .flags import *
 from .relationship import Relationship
 from .member import Member, VoiceState
-from .message import Message, MessageReference, Attachment
+from .message import *
 from .asset import Asset
 from .errors import *
 from .calls import CallMessage, GroupCall
 from .permissions import Permissions, PermissionOverwrite
-from .role import Role
+from .role import Role, RoleTags
 from .file import File
 from .colour import Color, Colour
 from .integrations import Integration, IntegrationAccount
@@ -64,11 +64,4 @@ VersionInfo = namedtuple('VersionInfo', 'major minor micro enhanced releaselevel
 
 version_info = VersionInfo(major=1, minor=6, micro=0, enhanced=6, releaselevel='alpha', serial=0)
 
-try:
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-logging.getLogger(__name__).addHandler(NullHandler())
+logging.getLogger(__name__).addHandler(logging.NullHandler())
