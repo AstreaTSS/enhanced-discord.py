@@ -91,6 +91,11 @@ class CogMeta(type):
                 @commands.command(hidden=False)
                 async def bar(self, ctx):
                     pass # hidden -> False
+
+    aliases: :class:`list`
+        A list of aliases for the cog name.
+
+        .. versionadded:: 1.6.0.7
     """
 
     def __new__(cls, *args, **kwargs):
