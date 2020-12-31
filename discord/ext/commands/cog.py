@@ -98,6 +98,11 @@ class CogMeta(type):
         attrs['__cog_name__'] = kwargs.pop('name', name)
         attrs['__cog_settings__'] = command_attrs = kwargs.pop('command_attrs', {})
 
+        aliases = kwargs.pop('aliases', [])
+        if not isinstance(aliases, list):
+            raise TypeError("Cog aliases must be a list, not a {0}".format(type(aliases)))
+        attrs['aliases'] = aliases
+
         description = kwargs.pop('description', None)
         if description is None:
             description = inspect.cleandoc(attrs.get('__doc__', ''))

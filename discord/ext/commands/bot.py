@@ -529,6 +529,9 @@ class BotBase(GroupMixin):
 
         cog = cog._inject(self)
         self.__cogs[cog.__cog_name__] = cog
+        if cog.aliases:
+            for alias in cog.aliases:
+                self.__cogs[alias] = cog
 
     def get_cog(self, name):
         """Gets the cog instance requested.
@@ -566,6 +569,10 @@ class BotBase(GroupMixin):
         cog = self.__cogs.pop(name, None)
         if cog is None:
             return
+
+        if cog.aliases:
+            for alias in cog.aliases:
+                self.__cogs.pop(alias)
 
         help_command = self._help_command
         if help_command and help_command.cog is cog:
