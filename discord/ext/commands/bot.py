@@ -833,7 +833,7 @@ class BotBase(GroupMixin):
                 if self.case_insensitive_prefix:
                     temp = []
                     for pre in ret:
-                        temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
+                        temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in pre))))
                     ret = temp
                 else:
                     ret = list(ret)
