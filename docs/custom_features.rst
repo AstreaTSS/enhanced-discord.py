@@ -28,3 +28,5 @@ Here are the custom features listed that have been added to enhanced-dpy. You ca
 - Added ``Context.clean_prefix``
 - Added ``Color.nitro_booster``
 - Added ``Permissions.admin`` as alias to ``Permissions.administrator``
+- Added ``Cog.aliases``
+- Added ``Bot.case_insensitive_prefix``

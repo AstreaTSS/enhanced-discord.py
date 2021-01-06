@@ -28,6 +28,7 @@ import asyncio
 import collections
 import inspect
 import importlib.util
+import itertools
 import sys
 import traceback
 import types
@@ -94,9 +95,10 @@ class _DefaultRepr:
 _default = _DefaultRepr()
 
 class BotBase(GroupMixin):
-    def __init__(self, command_prefix, help_command=_default, description=None, **options):
+    def __init__(self, command_prefix, case_insensitive_prefix=False, help_command=_default, description=None, **options):
         super().__init__(**options)
         self.command_prefix = command_prefix
+        self.case_insensitive_prefix = case_insensitive_prefix
         self.extra_events = {}
         self.__cogs = {}
         self.__extensions = {}
@@ -828,7 +830,13 @@ class BotBase(GroupMixin):
 
         if not isinstance(ret, str):
             try:
-                ret = list(ret)
+                if self.case_insensitive_prefix:
+                    temp = []
+                    for pre in ret:
+                        temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
+                    ret = temp
+                else:
+                    ret = list(ret)
             except TypeError:
                 # It's possible that a generator raised this exception.  Don't
                 # replace it with our own error if that's the case.
@@ -841,6 +849,8 @@ class BotBase(GroupMixin):
             if not ret:
                 raise ValueError("Iterable command_prefix must contain at least one prefix")
 
+        if self.case_insensitive_prefix:
+            return list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
         return ret
 
     async def get_context(self, message, *, cls=Context):
@@ -1012,6 +1022,10 @@ class Bot(BotBase, discord.Client):
             matches messages starting with ``!?``. This is especially important
             when passing an empty string, it should always be last as no prefix
             after it will be matched.
+    case_insensitive_prefix: :class:`bool`
+        Wheter the provided command_prefix should be case insensitive or not
+
+        .. versionadded:: 1.6.0.7
     case_insensitive: :class:`bool`
         Whether the commands should be case insensitive. Defaults to ``False``. This
         attribute does not carry over to groups. You must set it to every group if

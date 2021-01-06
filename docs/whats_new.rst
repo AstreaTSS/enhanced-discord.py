@@ -11,6 +11,17 @@ Changelog
 This page keeps a detailed human friendly rendering of what's new and changed
 in specific versions.
 
+.. _vp1p6p0p7:
+
+v1.6.0.7
+--------
+
+New Features
+~~~~~~~~~~~~~~
+
+- Add :attr:`Cog.aliases`
+- Add :attr:`Bot.case_insensitive_prefix`
+
 .. _vp1p5p1p6:
 
 v1.5.1.6
