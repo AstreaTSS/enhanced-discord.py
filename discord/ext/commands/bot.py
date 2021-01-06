@@ -843,16 +843,16 @@ class BotBase(GroupMixin):
             if not ret:
                 raise ValueError("Iterable command_prefix must contain at least one prefix")
 
-        if self.case_insensitive_prefix:
-            if isinstance(ret, list):
-                temp = []
-                for pre in ret:
-                    if pre in (self.user.mention + ' ', '<@!%s> ' % self.user.id):
-                        continue
-                    temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in pre))))
-                ret = temp
-            else:
-                ret = list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
+        # if self.case_insensitive_prefix:
+        #     if isinstance(ret, list):
+        #         temp = []
+        #         for pre in ret:
+        #             if pre in (self.user.mention + ' ', '<@!%s> ' % self.user.id):
+        #                 continue
+        #             temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in pre))))
+        #         ret = temp
+        #     else:
+        #         ret = list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
         return ret
 
     async def get_context(self, message, *, cls=Context):
