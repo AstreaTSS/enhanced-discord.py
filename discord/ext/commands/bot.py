@@ -830,13 +830,7 @@ class BotBase(GroupMixin):
 
         if not isinstance(ret, str):
             try:
-                if self.case_insensitive_prefix:
-                    temp = []
-                    for pre in ret:
-                        temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in pre))))
-                    ret = temp
-                else:
-                    ret = list(ret)
+                ret = list(ret)
             except TypeError:
                 # It's possible that a generator raised this exception.  Don't
                 # replace it with our own error if that's the case.
@@ -850,7 +844,15 @@ class BotBase(GroupMixin):
                 raise ValueError("Iterable command_prefix must contain at least one prefix")
 
         if self.case_insensitive_prefix:
-            return list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
+            if isinstance(ret, list):
+                temp = []
+                for pre in ret:
+                    if pre in (self.user.mention + ' ', '<@!%s> ' % self.user.id):
+                        continue
+                    temp += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in pre))))
+                ret = temp
+            else:
+                ret = list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in ret))))
         return ret
 
     async def get_context(self, message, *, cls=Context):
