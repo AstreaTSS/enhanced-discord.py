@@ -123,7 +123,7 @@ New Features
 - Changed :attr:`Guild.icon_url` and :attr:`User.avatar_url` to return a string of the url in stead of an :class:`Asset`
 - Documentation uses `Neo Docs by Rapptz <Rapptz/discord.py/tree/neo-docs>`_
 - Add 1000+ colors from `ext colors <https://github.com/MGardne8/DiscordPyColours>`_
-- Add support for ``hex()`` to :class:`Color`
+- Add support for ``hex()`` to :class:`Colour`
 - Add :attr:`Guild.bots`
 - Add :attr:`Guild.humans`
 - |commands| Add :attr:`Bot.owner <ext.commands.Bot>`

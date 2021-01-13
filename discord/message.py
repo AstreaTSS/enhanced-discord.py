@@ -923,7 +923,7 @@ class Message(Hashable):
             Added the new ``delay`` keyword-only parameter.
 
         .. versionchanged:: 1.6.0.7
-            ADded the new ``silent`` keyword-only parameter.
+            Added the new ``silent`` keyword-only parameter.
 
         Parameters
         -----------
