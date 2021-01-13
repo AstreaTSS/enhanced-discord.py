@@ -28,6 +28,6 @@ Here are the custom features listed that have been added to enhanced-dpy. You ca
 - Added :attr:`Context.clean_prefix <.ext.commands.Context.clean_prefix>`
 - Added :meth:`Colour.nitro_booster`
 - Added :attr:`Permissions.admin` as alias to :attr:`Permissions.administrator`
-- Added :attr:`Cog.aliases <.ext.commands.Cog.aliases>`
+- Added :attr:`CogMeta.aliases <.ext.commands.CogMeta.aliases>`
 - Added :attr:`Bot.case_insensitive_prefix <.ext.commands.Bot.case_insensitive_prefix>`
 - Added ``silent`` kwarg to :meth:`Message.delete`

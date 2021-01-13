@@ -19,7 +19,7 @@ v1.6.0.7
 New Features
 ~~~~~~~~~~~~~~
 
-- Add :attr:`Cog.aliases <.ext.commands.Cog.aliases>`
+- Add :attr:`CogMeta.aliases <.ext.commands.CogMeta.aliases>`
 - Add :attr:`Bot.case_insensitive_prefix <.ext.commands.Bot.case_insensitive_prefix>`
 - Add ``silent`` kwargs to :meth:`Message.delete`
 
