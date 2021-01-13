@@ -21,6 +21,7 @@ New Features
 
 - Add :attr:`Cog.aliases`
 - Add :attr:`Bot.case_insensitive_prefix`
+- Add ``silent`` kwargs to :meth:`Message.delete`
 
 .. _vp1p5p1p6:
 
