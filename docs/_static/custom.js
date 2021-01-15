@@ -5,6 +5,7 @@ let bottomHeightThreshold, sections;
 let hamburgerToggle;
 let mobileSearch;
 let sidebar;
+let toTop;
 
 class Modal {
   constructor(element) {
@@ -49,12 +50,19 @@ class SearchBar {
 
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   mobileSearch = new SearchBar();
 
   bottomHeightThreshold = document.documentElement.scrollHeight - 30;
   sections = document.querySelectorAll('section');
   hamburgerToggle = document.getElementById('hamburger-toggle');
+  
+  toTop = document.getElementById('to-top');
+  toTop.hidden = !(window.scrollY > 0);
 
   if (hamburgerToggle) {
     hamburgerToggle.addEventListener('click', (e) => {
@@ -76,6 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // insert ourselves after the element
     parent.insertBefore(table, element.nextSibling);
   });
+
+  window.addEventListener('scroll', () => {
+    toTop.hidden = !(window.scrollY > 0);
+  });
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.code == "Escape" && activeModal) {
+    activeModal.close();
+  }
 });
 
 document.addEventListener('keydown', (event) => {

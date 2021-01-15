@@ -87,6 +87,14 @@ VoiceClient
 .. autoclass:: VoiceClient()
     :members:
 
+VoiceProtocol
+~~~~~~~~~~~~~~~
+
+.. attributetable:: VoiceProtocol
+
+.. autoclass:: VoiceProtocol
+    :members:
+
 AudioSource
 ~~~~~~~~~~~~
 
@@ -147,7 +155,7 @@ Opus Library
 Event Reference
 ---------------
 
-This page outlines the different types of events listened by :class:`Client`.
+This section outlines the different types of events listened by :class:`Client`.
 
 There are two ways to register an event, the first way is through the use of
 :meth:`Client.event`. The second way is through subclassing :class:`Client` and
@@ -661,6 +669,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     - activity
     - nickname
     - roles
+    - pending
 
     This requires :attr:`Intents.members` to be enabled.
 
@@ -2150,9 +2159,9 @@ Certain utilities make working with async iterators easier, detailed below.
         Collects items into chunks of up to a given maximum size.
         Another :class:`AsyncIterator` is returned which collects items into
         :class:`list`\s of a given size. The maximum chunk size must be a positive integer.
-        
+
         .. versionadded:: 1.6
-        
+
         Collecting groups of users: ::
 
             async for leader, *users in reaction.users().chunk(3):
@@ -2616,9 +2625,20 @@ Webhook Support
 
 discord.py offers support for creating, editing, and executing webhooks through the :class:`Webhook` class.
 
+Webhook
+~~~~~~~~~
+
 .. attributetable:: Webhook
 
 .. autoclass:: Webhook
+    :members:
+
+WebhookMessage
+~~~~~~~~~~~~~~~~
+
+.. attributetable:: WebhookMessage
+
+.. autoclass:: WebhookMessage
     :members:
 
 Adapters
@@ -2789,6 +2809,8 @@ Message
 
 DeletedReferencedMessage
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: DeletedReferencedMessage
 
 .. autoclass:: DeletedReferencedMessage()
     :members:
@@ -2998,6 +3020,8 @@ Invite
 Template
 ~~~~~~~~~
 
+.. attributetable:: Template
+
 .. autoclass:: Template()
     :members:
 
@@ -3028,6 +3052,8 @@ Widget
 
 Sticker
 ~~~~~~~~~~~~~~~
+
+.. attributetable:: Sticker
 
 .. autoclass:: Sticker()
     :members:
@@ -3101,6 +3127,8 @@ dynamic attributes in mind.
 Object
 ~~~~~~~
 
+.. attributetable:: Object
+
 .. autoclass:: Object
     :members:
 
@@ -3124,6 +3152,12 @@ MessageReference
 ~~~~~~~~~~~~~~~~~
 
 .. autoclass:: MessageReference
+    :members:
+
+PartialMessage
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: PartialMessage
     :members:
 
 Intents

@@ -34,7 +34,7 @@ from .reaction import Reaction
 from .emoji import Emoji
 from .partial_emoji import PartialEmoji
 from .calls import CallMessage
-from .enums import MessageType, try_enum
+from .enums import MessageType, ChannelType, try_enum
 from .errors import InvalidArgument, ClientException, HTTPException
 from .embeds import Embed
 from .member import Member
@@ -48,9 +48,25 @@ from .sticker import Sticker
 __all__ = (
     'Attachment',
     'Message',
+    'PartialMessage',
     'MessageReference',
     'DeletedReferencedMessage',
 )
+
+def convert_emoji_reaction(emoji):
+    if isinstance(emoji, Reaction):
+        emoji = emoji.emoji
+
+    if isinstance(emoji, Emoji):
+        return '%s:%s' % (emoji.name, emoji.id)
+    if isinstance(emoji, PartialEmoji):
+        return emoji._as_reaction()
+    if isinstance(emoji, str):
+        # Reactions can be in :name:id format, but not <:name:id>.
+        # No existing emojis have <> in them, so this should be okay.
+        return emoji.strip('<>')
+
+    raise InvalidArgument('emoji argument must be str, Emoji, or Reaction not {.__class__.__name__}.'.format(emoji))
 
 class Attachment:
     """Represents an attachment from Discord.
@@ -268,7 +284,7 @@ class MessageReference:
         The guild id of the message referenced.
     resolved: Optional[Union[:class:`Message`, :class:`DeletedReferencedMessage`]]
         The message that this reference resolved to. If this is ``None``
-        then the original message was not fetched either due to the discord API
+        then the original message was not fetched either due to the Discord API
         not attempting to resolve it or it not being available at the time of creation.
         If the message was resolved at a prior point but has since been deleted then
         this will be of type :class:`DeletedReferencedMessage`.
@@ -372,7 +388,19 @@ def flatten_handlers(cls):
 class Message(Hashable):
     r"""Represents a message from Discord.
 
-    There should be no need to create one of these manually.
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two messages are equal.
+
+        .. describe:: x != y
+
+            Checks if two messages are not equal.
+
+        .. describe:: hash(x)
+
+            Returns the message's hash.
 
     Attributes
     -----------
@@ -423,7 +451,7 @@ class Message(Hashable):
         .. warning::
 
             The order of the mentions list is not in any particular order so you should
-            not rely on it. This is a discord limitation, not one with the library.
+            not rely on it. This is a Discord limitation, not one with the library.
     channel_mentions: List[:class:`abc.GuildChannel`]
         A list of :class:`abc.GuildChannel` that were mentioned. If the message is in a private message
         then the list is always empty.
@@ -996,14 +1024,6 @@ class Message(Hashable):
             are used instead.
 
             .. versionadded:: 1.4
-            .. versionchanged:: 1.6
-                :attr:`~discord.Client.allowed_mentions` serves as defaults unconditionally.
-
-        mention_author: Optional[:class:`bool`]
-            Overrides the :attr:`~discord.AllowedMentions.replied_user` attribute
-            of ``allowed_mentions``.
-
-            .. versionadded:: 1.6
 
         Raises
         -------
@@ -1041,24 +1061,17 @@ class Message(Hashable):
 
         delete_after = fields.pop('delete_after', None)
 
-        mention_author = fields.pop('mention_author', None)
-        allowed_mentions = fields.pop('allowed_mentions', None)
-        if allowed_mentions is not None:
-            if self._state.allowed_mentions is not None:
-                allowed_mentions = self._state.allowed_mentions.merge(allowed_mentions)
-            allowed_mentions = allowed_mentions.to_dict()
-            if mention_author is not None:
-                allowed_mentions['replied_user'] = mention_author
-            fields['allowed_mentions'] = allowed_mentions
-        elif mention_author is not None:
-            if self._state.allowed_mentions is not None:
-                allowed_mentions = self._state.allowed_mentions.to_dict()
-                allowed_mentions['replied_user'] = mention_author
-            else:
-                allowed_mentions = {'replied_user': mention_author}
-            fields['allowed_mentions'] = allowed_mentions
-        elif self._state.allowed_mentions is not None:
-            fields['allowed_mentions'] = self._state.allowed_mentions.to_dict()
+        try:
+            allowed_mentions = fields.pop('allowed_mentions')
+        except KeyError:
+            pass
+        else:
+            if allowed_mentions is not None:
+                if self._state.allowed_mentions is not None:
+                    allowed_mentions = self._state.allowed_mentions.merge(allowed_mentions).to_dict()
+                else:
+                    allowed_mentions = allowed_mentions.to_dict()
+                fields['allowed_mentions'] = allowed_mentions
 
         if fields:
             data = await self._state.http.edit_message(self.channel.id, self.id, **fields)
@@ -1170,7 +1183,7 @@ class Message(Hashable):
             The emoji parameter is invalid.
         """
 
-        emoji = self._emoji_reaction(emoji)
+        emoji = convert_emoji_reaction(emoji)
         await self._state.http.add_reaction(self.channel.id, self.id, emoji)
 
     async def remove_reaction(self, emoji, member):
@@ -1205,7 +1218,7 @@ class Message(Hashable):
             The emoji parameter is invalid.
         """
 
-        emoji = self._emoji_reaction(emoji)
+        emoji = convert_emoji_reaction(emoji)
 
         if member.id == self._state.self_id:
             await self._state.http.remove_own_reaction(self.channel.id, self.id, emoji)
@@ -1240,24 +1253,8 @@ class Message(Hashable):
             The emoji parameter is invalid.
         """
 
-        emoji = self._emoji_reaction(emoji)
+        emoji = convert_emoji_reaction(emoji)
         await self._state.http.clear_single_reaction(self.channel.id, self.id, emoji)
-
-    @staticmethod
-    def _emoji_reaction(emoji):
-        if isinstance(emoji, Reaction):
-            emoji = emoji.emoji
-
-        if isinstance(emoji, Emoji):
-            return '%s:%s' % (emoji.name, emoji.id)
-        if isinstance(emoji, PartialEmoji):
-            return emoji._as_reaction()
-        if isinstance(emoji, str):
-            # Reactions can be in :name:id format, but not <:name:id>.
-            # No existing emojis have <> in them, so this should be okay.
-            return emoji.strip('<>')
-
-        raise InvalidArgument('emoji argument must be str, Emoji, or Reaction not {.__class__.__name__}.'.format(emoji))
 
     async def clear_reactions(self):
         """|coro|
@@ -1301,7 +1298,7 @@ class Message(Hashable):
         A shortcut method to :meth:`abc.Messageable.send` to reply to the
         :class:`Message`.
 
-            .. versionadded:: 1.6
+        .. versionadded:: 1.6
 
         Raises
         --------
@@ -1344,3 +1341,116 @@ class Message(Hashable):
             data['guild_id'] = self.guild.id
 
         return data
+
+def implement_partial_methods(cls):
+    msg = Message
+    for name in cls._exported_names:
+        func = getattr(msg, name)
+        setattr(cls, name, func)
+    return cls
+
+@implement_partial_methods
+class PartialMessage(Hashable):
+    """Represents a partial message to aid with working messages when only
+    a message and channel ID are present.
+
+    There are two ways to construct this class. The first one is through
+    the constructor itself, and the second is via
+    :meth:`TextChannel.get_partial_message` or :meth:`DMChannel.get_partial_message`.
+
+    Note that this class is trimmed down and has no rich attributes.
+
+    .. versionadded:: 1.6
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two partial messages are equal.
+
+        .. describe:: x != y
+
+            Checks if two partial messages are not equal.
+
+        .. describe:: hash(x)
+
+            Returns the partial message's hash.
+
+    Attributes
+    -----------
+    channel: Union[:class:`TextChannel`, :class:`DMChannel`]
+        The channel associated with this partial message.
+    id: :class:`int`
+        The message ID.
+    """
+
+    __slots__ = ('channel', 'id', '_cs_guild', '_state')
+
+    _exported_names = (
+        'jump_url',
+        'delete',
+        'edit',
+        'publish',
+        'pin',
+        'unpin',
+        'add_reaction',
+        'remove_reaction',
+        'clear_reaction',
+        'clear_reactions',
+        'reply',
+        'to_reference',
+        'to_message_reference_dict',
+    )
+
+    def __init__(self, *, channel, id):
+        if channel.type not in (ChannelType.text, ChannelType.news, ChannelType.private):
+            raise TypeError('Expected TextChannel or DMChannel not %r' % type(channel))
+
+        self.channel = channel
+        self._state = channel._state
+        self.id = id
+
+    def _update(self, data):
+        # This is used for duck typing purposes.
+        # Just do nothing with the data.
+        pass
+
+    # Also needed for duck typing purposes
+    # n.b. not exposed
+    pinned = property(None, lambda x, y: ...)
+
+    def __repr__(self):
+        return '<PartialMessage id={0.id} channel={0.channel!r}>'.format(self)
+
+    @property
+    def created_at(self):
+        """:class:`datetime.datetime`: The partial message's creation time in UTC."""
+        return utils.snowflake_time(self.id)
+
+    @utils.cached_slot_property('_cs_guild')
+    def guild(self):
+        """Optional[:class:`Guild`]: The guild that the partial message belongs to, if applicable."""
+        return getattr(self.channel, 'guild', None)
+
+    async def fetch(self):
+        """|coro|
+
+        Fetches the partial message to a full :class:`Message`.
+
+        Raises
+        --------
+        NotFound
+            The message was not found.
+        Forbidden
+            You do not have the permissions required to get a message.
+        HTTPException
+            Retrieving the message failed.
+
+        Returns
+        --------
+        :class:`Message`
+            The full message.
+        """
+
+        data = await self._state.http.get_message(self.channel.id, self.id)
+        return self._state.create_message(channel=self.channel, data=data)

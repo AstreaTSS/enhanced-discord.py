@@ -34,7 +34,6 @@ from .mixins import Hashable
 from . import utils
 from .asset import Asset
 from .errors import ClientException, NoMoreItems, InvalidArgument
-from .webhook import Webhook
 
 __all__ = (
     'TextChannel',
@@ -228,7 +227,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             A value of `0` disables slowmode. The maximum value possible is `21600`.
         type: :class:`ChannelType`
             Change the type of this text channel. Currently, only conversion between
-            :attr:`ChannelType.text` and :attr:`ChannelType.news` is supported. This 
+            :attr:`ChannelType.text` and :attr:`ChannelType.news` is supported. This
             is only available to guilds that contain ``NEWS`` in :attr:`Guild.features`.
         reason: Optional[:class:`str`]
             The reason for editing this channel. Shows up on the audit log.
@@ -436,6 +435,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             The webhooks for this channel.
         """
 
+        from .webhook import Webhook
         data = await self._state.http.channel_webhooks(self.id)
         return [Webhook.from_state(d, state=self._state) for d in data]
 
@@ -472,6 +472,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             The created webhook.
         """
 
+        from .webhook import Webhook
         if avatar is not None:
             avatar = utils._bytes_to_base64_data(avatar)
 
@@ -519,8 +520,31 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         if not isinstance(destination, TextChannel):
             raise InvalidArgument('Expected TextChannel received {0.__name__}'.format(type(destination)))
 
+        from .webhook import Webhook
         data = await self._state.http.follow_webhook(self.id, webhook_channel_id=destination.id, reason=reason)
         return Webhook._as_follower(data, channel=destination, user=self._state.user)
+
+    def get_partial_message(self, message_id):
+        """Creates a :class:`PartialMessage` from the message ID.
+
+        This is useful if you want to work with a message and only have its ID without
+        doing an unnecessary API call.
+
+        .. versionadded:: 1.6
+
+        Parameters
+        ------------
+        message_id: :class:`int`
+            The message ID to create a partial message for.
+
+        Returns
+        ---------
+        :class:`PartialMessage`
+            The partial message.
+        """
+
+        from .message import PartialMessage
+        return PartialMessage(channel=self, id=message_id)
 
 class VoiceChannel(discord.abc.Connectable, discord.abc.GuildChannel, Hashable):
     """Represents a Discord guild voice channel.
@@ -1078,6 +1102,28 @@ class DMChannel(discord.abc.Messageable, Hashable):
         base.send_tts_messages = False
         base.manage_messages = False
         return base
+
+    def get_partial_message(self, message_id):
+        """Creates a :class:`PartialMessage` from the message ID.
+
+        This is useful if you want to work with a message and only have its ID without
+        doing an unnecessary API call.
+
+        .. versionadded:: 1.6
+
+        Parameters
+        ------------
+        message_id: :class:`int`
+            The message ID to create a partial message for.
+
+        Returns
+        ---------
+        :class:`PartialMessage`
+            The partial message.
+        """
+
+        from .message import PartialMessage
+        return PartialMessage(channel=self, id=message_id)
 
 class GroupChannel(discord.abc.Messageable, Hashable):
     """Represents a Discord group channel.

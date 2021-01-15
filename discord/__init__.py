@@ -62,6 +62,6 @@ from .sticker import Sticker
 
 VersionInfo = namedtuple('VersionInfo', 'major minor micro enhanced releaselevel serial')
 
-version_info = VersionInfo(major=1, minor=6, micro=0, enhanced=6, releaselevel='alpha', serial=0)
+version_info = VersionInfo(major=1, minor=6, micro=0, enhanced=7, releaselevel='alpha', serial=0)
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
