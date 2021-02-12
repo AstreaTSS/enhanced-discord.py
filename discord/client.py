@@ -280,6 +280,22 @@ class Client:
 
     # internals
 
+    def get_message(self, id):
+        """Get a message from cache if the message is still in cache.
+
+        .. versionadded:: 1.6.0.7
+
+        Parameters
+        -----------
+        id: :class:`int`
+            The message ID to look for.
+
+        Returns
+        --------
+        Optional[:class:`.Message`]
+            The message asked for."""
+        return utils.get(self.cached_messages, id=id)
+
     @property
     def embed_color(self):
         """Optional[:class:`.Colour`]: The default embed colour that is

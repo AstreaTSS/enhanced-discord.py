@@ -22,6 +22,7 @@ New Features
 - Add :attr:`CogMeta.aliases <.ext.commands.CogMeta.aliases>`
 - Add :attr:`Bot.case_insensitive_prefix <.ext.commands.Bot.case_insensitive_prefix>`
 - Add ``silent`` kwargs to :meth:`Message.delete`
+- Add :meth:`Client.get_message`
 
 .. _vp1p5p1p6:
 

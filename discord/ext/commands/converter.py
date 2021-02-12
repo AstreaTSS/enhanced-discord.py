@@ -145,7 +145,7 @@ class MemberConverter(IDConverter):
             # If we're being rate limited on the WS, then fall back to using the HTTP API
             # So we don't have to wait ~60 seconds for the query to finish
             try:
-                member = await guild.fetch_member(user_id)
+                member = await guild.try_member(user_id)
             except discord.HTTPException:
                 return None
 
