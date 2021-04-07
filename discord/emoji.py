@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,6 +26,10 @@ from .asset import Asset
 from . import utils
 from .partial_emoji import _EmojiTag
 from .user import User
+
+__all__ = (
+    'Emoji',
+)
 
 class Emoji(_EmojiTag):
     """Represents a custom emoji.

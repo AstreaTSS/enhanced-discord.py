@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,6 +26,10 @@ from .mixins import Hashable
 from .asset import Asset
 from .utils import snowflake_time
 from .enums import StickerType, try_enum
+
+__all__ = (
+    'Sticker',
+)
 
 class Sticker(Hashable):
     """Represents a sticker
@@ -93,7 +95,7 @@ class Sticker(Hashable):
 
     @property
     def created_at(self):
-        """:class:`datetime.datetime`: Returns the sticker's creation time in UTC as a naive datetime."""
+        """:class:`datetime.datetime`: Returns the sticker's creation time in UTC."""
         return snowflake_time(self.id)
 
     @property

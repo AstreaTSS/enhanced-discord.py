@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -29,6 +27,12 @@ from .user import BaseUser
 from .activity import create_activity
 from .invite import Invite
 from .enums import Status, try_enum
+
+__all__ = (
+    'WidgetChannel',
+    'WidgetMember',
+    'Widget',
+)
 
 class WidgetChannel:
     """Represents a "partial" widget channel.
@@ -77,7 +81,7 @@ class WidgetChannel:
     @property
     def mention(self):
         """:class:`str`: The string that allows you to mention the channel."""
-        return '<#%s>' % self.id
+        return f'<#{self.id}>'
 
     @property
     def created_at(self):
@@ -156,7 +160,7 @@ class WidgetMember(BaseUser):
     @property
     def display_name(self):
         """:class:`str`: Returns the member's display name."""
-        return self.nick if self.nick else self.name
+        return self.nick or self.name
 
 class Widget:
     """Represents a :class:`Guild` widget.
@@ -236,7 +240,7 @@ class Widget:
     @property
     def json_url(self):
         """:class:`str`: The JSON URL of the widget."""
-        return "https://discord.com/api/guilds/{0.id}/widget.json".format(self)
+        return f"https://discord.com/api/guilds/{self.id}/widget.json"
 
     @property
     def invite_url(self):

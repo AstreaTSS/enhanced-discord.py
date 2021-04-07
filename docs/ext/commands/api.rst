@@ -281,16 +281,25 @@ Converters
 .. autoclass:: discord.ext.commands.MessageConverter
     :members:
 
+.. autoclass:: discord.ext.commands.PartialMessageConverter
+    :members:
+
 .. autoclass:: discord.ext.commands.TextChannelConverter
     :members:
 
 .. autoclass:: discord.ext.commands.VoiceChannelConverter
     :members:
 
+.. autoclass:: discord.ext.commands.StoreChannelConverter
+    :members:
+
 .. autoclass:: discord.ext.commands.CategoryChannelConverter
     :members:
 
 .. autoclass:: discord.ext.commands.InviteConverter
+    :members:
+
+.. autoclass:: discord.ext.commands.GuildConverter
     :members:
 
 .. autoclass:: discord.ext.commands.RoleConverter
@@ -405,6 +414,9 @@ Exceptions
     :members:
 
 .. autoexception:: discord.ext.commands.MemberNotFound
+    :members:
+
+.. autoexception:: discord.ext.commands.GuildNotFound
     :members:
 
 .. autoexception:: discord.ext.commands.UserNotFound

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -29,6 +27,9 @@ from .user import User
 from .asset import Asset
 from .team import Team
 
+__all__ = (
+    'AppInfo',
+)
 
 class AppInfo:
     """Represents the application info for the bot provided by Discord.

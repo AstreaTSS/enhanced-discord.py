@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -101,7 +99,7 @@ class CogMeta(type):
     def __new__(cls, *args, **kwargs):
         name, bases, attrs = args
         attrs['__cog_name__'] = kwargs.pop('name', name)
-        attrs['__cog_settings__'] = command_attrs = kwargs.pop('command_attrs', {})
+        attrs['__cog_settings__'] = kwargs.pop('command_attrs', {})
 
         aliases = kwargs.pop('aliases', [])
         if not isinstance(aliases, list):
@@ -130,13 +128,13 @@ class CogMeta(type):
                     value = value.__func__
                 if isinstance(value, _BaseCommand):
                     if is_static_method:
-                        raise TypeError('Command in method {0}.{1!r} must not be staticmethod.'.format(base, elem))
+                        raise TypeError(f'Command in method {base}.{elem!r} must not be staticmethod.')
                     if elem.startswith(('cog_', 'bot_')):
                         raise TypeError(no_bot_cog.format(base, elem))
                     commands[elem] = value
                 elif inspect.iscoroutinefunction(value):
                     try:
-                        is_listener = getattr(value, '__cog_listener__')
+                        getattr(value, '__cog_listener__')
                     except AttributeError:
                         continue
                     else:
@@ -202,7 +200,7 @@ class Cog(metaclass=CogMeta):
                 parent = lookup[parent.qualified_name]
 
                 # Update our parent's reference to our self
-                removed = parent.remove_command(command.name)
+                parent.remove_command(command.name)
                 parent.add_command(command)
 
         return self
@@ -285,7 +283,7 @@ class Cog(metaclass=CogMeta):
         """
 
         if name is not None and not isinstance(name, str):
-            raise TypeError('Cog.listener expected str but received {0.__class__.__name__!r} instead.'.format(name))
+            raise TypeError(f'Cog.listener expected str but received {name.__class__.__name__!r} instead.')
 
         def decorator(func):
             actual = func
@@ -305,6 +303,13 @@ class Cog(metaclass=CogMeta):
             # thus the assignments need to be on the actual function
             return func
         return decorator
+
+    def has_error_handler(self):
+        """:class:`bool`: Checks whether the cog has an error handler.
+
+        .. versionadded:: 1.7
+        """
+        return not hasattr(self.cog_command_error.__func__, '__cog_special_method__')
 
     @_cog_special_method
     def cog_unload(self):
@@ -411,7 +416,8 @@ class Cog(metaclass=CogMeta):
                 except Exception as e:
                     # undo our additions
                     for to_undo in self.__cog_commands__[:index]:
-                        bot.remove_command(to_undo.name)
+                        if to_undo.parent is None:
+                            bot.remove_command(to_undo.name)
                     raise e
 
         # check if we're overriding the default

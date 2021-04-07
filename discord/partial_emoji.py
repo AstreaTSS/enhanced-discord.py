@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -27,6 +25,9 @@ DEALINGS IN THE SOFTWARE.
 from .asset import Asset
 from . import utils
 
+__all__ = (
+    'PartialEmoji',
+)
 
 class _EmojiTag:
     __slots__ = ()
@@ -103,8 +104,8 @@ class PartialEmoji(_EmojiTag):
         if self.id is None:
             return self.name
         if self.animated:
-            return '<a:%s:%s>' % (self.name, self.id)
-        return '<:%s:%s>' % (self.name, self.id)
+            return f'<a:{self.name}:{self.id}>'
+        return f'<:{self.name}:{self.id}>'
 
     def __repr__(self):
         return '<{0.__class__.__name__} animated={0.animated} name={0.name!r} id={0.id}>'.format(self)
@@ -134,7 +135,7 @@ class PartialEmoji(_EmojiTag):
     def _as_reaction(self):
         if self.id is None:
             return self.name
-        return '%s:%s' % (self.name, self.id)
+        return f'{self.name}:{self.id}'
 
     @property
     def created_at(self):
@@ -149,10 +150,43 @@ class PartialEmoji(_EmojiTag):
 
     @property
     def url(self):
-        """:class:`Asset`: Returns an asset of the emoji, if it is custom."""
+        """:class:`Asset`: Returns the asset of the emoji, if it is custom.
+
+        This is equivalent to calling :meth:`url_as` with
+        the default parameters (i.e. png/gif detection).
+        """
+        return self.url_as(format=None)
+
+    def url_as(self, *, format=None, static_format="png"):
+        """Returns an :class:`Asset` for the emoji's url, if it is custom.
+
+        The format must be one of 'webp', 'jpeg', 'jpg', 'png' or 'gif'.
+        'gif' is only valid for animated emojis.
+
+        .. versionadded:: 1.7
+
+        Parameters
+        -----------
+        format: Optional[:class:`str`]
+            The format to attempt to convert the emojis to.
+            If the format is ``None``, then it is automatically
+            detected as either 'gif' or static_format, depending on whether the
+            emoji is animated or not.
+        static_format: Optional[:class:`str`]
+            Format to attempt to convert only non-animated emoji's to.
+            Defaults to 'png'
+
+        Raises
+        -------
+        InvalidArgument
+            Bad image format passed to ``format`` or ``static_format``.
+
+        Returns
+        --------
+        :class:`Asset`
+            The resulting CDN asset.
+        """
         if self.is_unicode_emoji():
             return Asset(self._state)
 
-        _format = 'gif' if self.animated else 'png'
-        url = "/emojis/{0.id}.{1}".format(self, _format)
-        return Asset(self._state, url)
+        return Asset._from_emoji(self._state, self, format=format, static_format=static_format)

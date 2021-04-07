@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -29,6 +27,7 @@ import functools
 import inspect
 import typing
 import datetime
+import sys
 
 import discord
 
@@ -158,7 +157,7 @@ class Command(_BaseCommand):
         isn't one.
     cog: Optional[:class:`Cog`]
         The cog that this command belongs to. ``None`` if there isn't one.
-    checks: List[Callable[..., :class:`bool`]]
+    checks: List[Callable[[:class:`.Context`], :class:`bool`]]
         A list of predicates that verifies if the command could be executed
         with the given :class:`.Context` as the sole parameter. If an exception
         is necessary to be thrown to signal failure, then one inherited from
@@ -301,16 +300,36 @@ class Command(_BaseCommand):
         signature = inspect.signature(function)
         self.params = signature.parameters.copy()
 
-        # PEP-563 allows postponing evaluation of annotations with a __future__
-        # import. When postponed, Parameter.annotation will be a string and must
-        # be replaced with the real value for the converters to work later on
+        # see: https://bugs.python.org/issue41341
+        resolve = self._recursive_resolve if sys.version_info < (3, 9) else self._return_resolved
+
+        try:
+            type_hints = {k: resolve(v) for k, v in typing.get_type_hints(function).items()}
+        except NameError as e:
+            raise NameError(f'unresolved forward reference: {e.args[0]}') from None
+
         for key, value in self.params.items():
-            if isinstance(value.annotation, str):
-                self.params[key] = value = value.replace(annotation=eval(value.annotation, function.__globals__))
+            # coalesce the forward references
+            if key in type_hints:
+                self.params[key] = value = value.replace(annotation=type_hints[key])
 
             # fail early for when someone passes an unparameterized Greedy type
             if value.annotation is converters.Greedy:
                 raise TypeError('Unparameterized Greedy[...] is disallowed in signature.')
+
+    def _return_resolved(self, type, **kwargs):
+        return type
+
+    def _recursive_resolve(self, type, *, globals=None):
+        if not isinstance(type, typing.ForwardRef):
+            return type
+
+        resolved = eval(type.__forward_arg__, globals)
+        args = typing.get_args(resolved)
+        for index, arg in enumerate(args):
+            inner_resolve_result = self._recursive_resolve(arg, globals=globals)
+            resolved[index] = inner_resolve_result
+        return resolved
 
     def add_check(self, func):
         """Adds a check to the command.
@@ -445,19 +464,13 @@ class Command(_BaseCommand):
                 converter = getattr(converters, converter.__name__ + 'Converter', converter)
 
         try:
-            if inspect.isclass(converter):
-                if issubclass(converter, converters.Converter):
-                    instance = converter()
-                    ret = await instance.convert(ctx, argument)
-                    return ret
+            if inspect.isclass(converter) and issubclass(converter, converters.Converter):
+                if inspect.ismethod(converter.convert):
+                    return await converter.convert(ctx, argument)
                 else:
-                    method = getattr(converter, 'convert', None)
-                    if method is not None and inspect.ismethod(method):
-                        ret = await method(ctx, argument)
-                        return ret
+                    return await converter().convert(ctx, argument)
             elif isinstance(converter, converters.Converter):
-                ret = await converter.convert(ctx, argument)
-                return ret
+                return await converter.convert(ctx, argument)
         except CommandError:
             raise
         except Exception as exc:
@@ -473,7 +486,7 @@ class Command(_BaseCommand):
             except AttributeError:
                 name = converter.__class__.__name__
 
-            raise BadArgument('Converting to "{}" failed for parameter "{}".'.format(name, param.name)) from exc
+            raise BadArgument(f'Converting to "{name}" failed for parameter "{param.name}".') from exc
 
     async def do_conversion(self, ctx, converter, argument, param):
         try:
@@ -523,7 +536,7 @@ class Command(_BaseCommand):
         # The greedy converter is simple -- it keeps going until it fails in which case,
         # it undos the view ready for the next parameter to use instead
         if type(converter) is converters._Greedy:
-            if param.kind == param.POSITIONAL_OR_KEYWORD:
+            if param.kind == param.POSITIONAL_OR_KEYWORD or param.kind == param.POSITIONAL_ONLY:
                 return await self._transform_greedy_pos(ctx, param, required, converter.converter)
             elif param.kind == param.VAR_POSITIONAL:
                 return await self._transform_greedy_var_pos(ctx, param, converter.converter)
@@ -693,7 +706,7 @@ class Command(_BaseCommand):
             raise discord.ClientException(fmt.format(self))
 
         for name, param in iterator:
-            if param.kind == param.POSITIONAL_OR_KEYWORD:
+            if param.kind == param.POSITIONAL_OR_KEYWORD or param.kind == param.POSITIONAL_ONLY:
                 transformed = await self.transform(ctx, param)
                 args.append(transformed)
             elif param.kind == param.KEYWORD_ONLY:
@@ -715,9 +728,8 @@ class Command(_BaseCommand):
                     except RuntimeError:
                         break
 
-        if not self.ignore_extra:
-            if not view.eof:
-                raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
+        if not self.ignore_extra and not view.eof:
+            raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
 
     async def call_before_hooks(self, ctx):
         # now that we're done preparing we can call the pre-command hooks
@@ -776,7 +788,7 @@ class Command(_BaseCommand):
         ctx.command = self
 
         if not await self.can_run(ctx):
-            raise CheckFailure('The check functions for command {0.qualified_name} failed.'.format(self))
+            raise CheckFailure(f'The check functions for command {self.qualified_name} failed.')
 
         if self._max_concurrency is not None:
             await self._max_concurrency.acquire(ctx)
@@ -904,6 +916,13 @@ class Command(_BaseCommand):
         self.on_error = coro
         return coro
 
+    def has_error_handler(self):
+        """:class:`bool`: Checks whether the command has an error handler registered.
+
+        .. versionadded:: 1.7
+        """
+        return hasattr(self, 'on_error')
+
     def before_invoke(self, coro):
         """A decorator that registers a coroutine as a pre-invoke hook.
 
@@ -1008,23 +1027,23 @@ class Command(_BaseCommand):
                 # do [name] since [name=None] or [name=] are not exactly useful for the user.
                 should_print = param.default if isinstance(param.default, str) else param.default is not None
                 if should_print:
-                    result.append('[%s=%s]' % (name, param.default) if not greedy else
-                                  '[%s=%s]...' % (name, param.default))
+                    result.append(f'[{name}={param.default}]' if not greedy else
+                                  f'[{name}={param.default}]...')
                     continue
                 else:
-                    result.append('[%s]' % name)
+                    result.append(f'[{name}]')
 
             elif param.kind == param.VAR_POSITIONAL:
                 if self.require_var_positional:
-                    result.append('<%s...>' % name)
+                    result.append(f'<{name}...>')
                 else:
-                    result.append('[%s...]' % name)
+                    result.append(f'[{name}...]')
             elif greedy:
-                result.append('[%s]...' % name)
+                result.append(f'[{name}]...')
             elif self._is_typing_optional(param.annotation):
-                result.append('[%s]' % name)
+                result.append(f'[{name}]')
             else:
-                result.append('<%s>' % name)
+                result.append(f'<{name}>')
 
         return ' '.join(result)
 
@@ -1056,14 +1075,14 @@ class Command(_BaseCommand):
         """
 
         if not self.enabled:
-            raise DisabledCommand('{0.name} command is disabled'.format(self))
+            raise DisabledCommand(f'{self.name} command is disabled')
 
         original = ctx.command
         ctx.command = self
 
         try:
             if not await ctx.bot.can_run(ctx):
-                raise CheckFailure('The global check functions for command {0.qualified_name} failed.'.format(self))
+                raise CheckFailure(f'The global check functions for command {self.qualified_name} failed.')
 
             cog = self.cog
             if cog is not None:
@@ -1335,6 +1354,8 @@ class Group(GroupMixin, Command):
             injected = hooked_wrapped_callback(self, ctx, self.callback)
             await injected(*ctx.args, **ctx.kwargs)
 
+        ctx.invoked_parents.append(ctx.invoked_with)
+
         if trigger and ctx.invoked_subcommand:
             ctx.invoked_with = trigger
             await ctx.invoked_subcommand.invoke(ctx)
@@ -1372,6 +1393,8 @@ class Group(GroupMixin, Command):
             finally:
                 if call_hooks:
                     await self.call_after_hooks(ctx)
+
+        ctx.invoked_parents.append(ctx.invoked_with)
 
         if trigger and ctx.invoked_subcommand:
             ctx.invoked_with = trigger
@@ -1578,7 +1601,7 @@ def check_any(*checks):
         try:
             pred = wrapped.predicate
         except AttributeError:
-            raise TypeError('%r must be wrapped by commands.check decorator' % wrapped) from None
+            raise TypeError(f'{wrapped!r} must be wrapped by commands.check decorator') from None
         else:
             unwrapped.append(pred)
 
@@ -1766,7 +1789,7 @@ def has_permissions(**perms):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
     def predicate(ctx):
         ch = ctx.channel
@@ -1791,7 +1814,7 @@ def bot_has_permissions(**perms):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
     def predicate(ctx):
         guild = ctx.guild
@@ -1819,7 +1842,7 @@ def has_guild_permissions(**perms):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
     def predicate(ctx):
         if not ctx.guild:
@@ -1844,7 +1867,7 @@ def bot_has_guild_permissions(**perms):
 
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
 
     def predicate(ctx):
         if not ctx.guild:
@@ -1949,8 +1972,11 @@ def cooldown(rate, per, type=BucketType.default):
         The number of times a command can be used before triggering a cooldown.
     per: :class:`float`
         The amount of seconds to wait for a cooldown when it's been triggered.
-    type: :class:`.BucketType`
-        The type of cooldown to have.
+    type: Union[:class:`.BucketType`, Callable[[:class:`.Message`], Any]]
+        The type of cooldown to have. If callable, should return a key for the mapping.
+
+        .. versionchanged:: 1.7
+            Callables are now supported for custom bucket types.
     """
 
     def decorator(func):

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -27,6 +25,10 @@ import re
 
 import discord.abc
 import discord.utils
+
+__all__ = (
+    'Context',
+)
 
 class Context(discord.abc.Messageable):
     r"""Represents the context in which a command is being invoked under.
@@ -58,6 +60,14 @@ class Context(discord.abc.Messageable):
     invoked_with: :class:`str`
         The command name that triggered this invocation. Useful for finding out
         which alias called the command.
+    invoked_parents: List[:class:`str`]
+        The command names of the parents that triggered this invocation. Useful for
+        finding out which aliases called the command.
+
+        For example in commands ``?a b c test``, the invoked parents are ``['a', 'b', 'c']``.
+
+        .. versionadded:: 1.7
+
     invoked_subcommand: :class:`Command`
         The subcommand that was invoked.
         If no valid subcommand was invoked then this is equal to ``None``.
@@ -80,6 +90,7 @@ class Context(discord.abc.Messageable):
         self.command = attrs.pop('command', None)
         self.view = attrs.pop('view', None)
         self.invoked_with = attrs.pop('invoked_with', None)
+        self.invoked_parents = attrs.pop('invoked_parents', [])
         self.invoked_subcommand = attrs.pop('invoked_subcommand', None)
         self.subcommand_passed = attrs.pop('subcommand_passed', None)
         self.command_failed = attrs.pop('command_failed', False)
@@ -94,7 +105,7 @@ class Context(discord.abc.Messageable):
         pattern = re.compile(r"<@!?%s>" % user.id)
         return pattern.sub("@%s" % user.display_name.replace('\\', r'\\'), self.prefix)
 
-    async def invoke(self, *args, **kwargs):
+    async def invoke(self, command, /, *args, **kwargs):
         r"""|coro|
 
         Calls a command with the arguments given.
@@ -111,10 +122,6 @@ class Context(discord.abc.Messageable):
             You must take care in passing the proper arguments when
             using this function.
 
-        .. warning::
-
-            The first parameter passed **must** be the command being invoked.
-
         Parameters
         -----------
         command: :class:`.Command`
@@ -129,18 +136,12 @@ class Context(discord.abc.Messageable):
         TypeError
             The command argument to invoke is missing.
         """
-
-        try:
-            command = args[0]
-        except IndexError:
-            raise TypeError('Missing command to invoke.') from None
-
         arguments = []
         if command.cog is not None:
             arguments.append(command.cog)
 
         arguments.append(self)
-        arguments.extend(args[1:])
+        arguments.extend(args)
 
         ret = await command.callback(*arguments, **kwargs)
         return ret
@@ -184,13 +185,15 @@ class Context(discord.abc.Messageable):
         index, previous = view.index, view.previous
         invoked_with = self.invoked_with
         invoked_subcommand = self.invoked_subcommand
+        invoked_parents = self.invoked_parents
         subcommand_passed = self.subcommand_passed
 
         if restart:
             to_call = cmd.root_parent or cmd
             view.index = len(self.prefix)
             view.previous = 0
-            view.get_word() # advance to get the root command
+            self.invoked_parents = []
+            self.invoked_with = view.get_word() # advance to get the root command
         else:
             to_call = cmd
 
@@ -202,6 +205,7 @@ class Context(discord.abc.Messageable):
             view.previous = previous
             self.invoked_with = invoked_with
             self.invoked_subcommand = invoked_subcommand
+            self.invoked_parents = invoked_parents
             self.subcommand_passed = subcommand_passed
 
     @property
@@ -214,7 +218,7 @@ class Context(discord.abc.Messageable):
 
     @property
     def cog(self):
-        """:class:`.Cog`: Returns the cog associated with this context's command. None if it does not exist."""
+        """Optional[:class:`.Cog`]: Returns the cog associated with this context's command. None if it does not exist."""
 
         if self.command is None:
             return None
@@ -227,8 +231,8 @@ class Context(discord.abc.Messageable):
 
     @discord.utils.cached_property
     def channel(self):
-        """:class:`.TextChannel`:
-        Returns the channel associated with this context's command. Shorthand for :attr:`.Message.channel`.
+        """Union[:class:`.abc.Messageable`]: Returns the channel associated with this context's command.
+        Shorthand for :attr:`.Message.channel`.
         """
         return self.message.channel
 
@@ -311,7 +315,7 @@ class Context(discord.abc.Messageable):
             entity = bot.get_cog(entity) or bot.get_command(entity)
 
         try:
-            qualified_name = entity.qualified_name
+            entity.qualified_name
         except AttributeError:
             # if we're here then it's not a cog, group, or command.
             return None
@@ -333,7 +337,6 @@ class Context(discord.abc.Messageable):
         except CommandError as e:
             await cmd.on_help_command_error(self, e)
 
+    @discord.utils.copy_doc(discord.Message.reply)
     async def reply(self, content=None, **kwargs):
         return await self.message.reply(content, **kwargs)
-
-    reply.__doc__ = discord.Message.reply.__doc__

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -29,6 +27,13 @@ from .object import Object
 from .permissions import PermissionOverwrite, Permissions
 from .colour import Colour
 from .invite import Invite
+from .mixins import Hashable
+
+__all__ = (
+    'AuditLogDiff',
+    'AuditLogChanges',
+    'AuditLogEntry',
+)
 
 def _transform_verification_level(entry, data):
     return enums.try_enum(enums.VerificationLevel, data)
@@ -51,8 +56,7 @@ def _transform_snowflake(entry, data):
 def _transform_channel(entry, data):
     if data is None:
         return None
-    channel = entry.guild.get_channel(int(data)) or Object(id=data)
-    return channel
+    return entry.guild.get_channel(int(data)) or Object(id=data)
 
 def _transform_owner_id(entry, data):
     if data is None:
@@ -94,7 +98,7 @@ class AuditLogDiff:
 
     def __repr__(self):
         values = ' '.join('%s=%r' % item for item in self.__dict__.items())
-        return '<AuditLogDiff %s>' % values
+        return f'<AuditLogDiff {values}>'
 
 class AuditLogChanges:
     TRANSFORMERS = {
@@ -166,7 +170,7 @@ class AuditLogChanges:
             self.before.color = self.before.colour
 
     def __repr__(self):
-        return '<AuditLogChanges before=%r after=%r>' % (self.before, self.after)
+        return f'<AuditLogChanges before={self.before!r} after={self.after!r}>'
 
     def _handle_role(self, first, second, entry, elem):
         if not hasattr(first, 'roles'):
@@ -187,10 +191,27 @@ class AuditLogChanges:
 
         setattr(second, 'roles', data)
 
-class AuditLogEntry:
+class AuditLogEntry(Hashable):
     r"""Represents an Audit Log entry.
 
     You retrieve these via :meth:`Guild.audit_logs`.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two entries are equal.
+
+        .. describe:: x != y
+
+            Checks if two entries are not equal.
+
+        .. describe:: hash(x)
+
+            Returns the entry's hash.
+
+    .. versionchanged:: 1.7
+        Audit log entries are now comparable and hashable.
 
     Attributes
     -----------

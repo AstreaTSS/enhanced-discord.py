@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -26,6 +24,11 @@ DEALINGS IN THE SOFTWARE.
 
 import colorsys
 import random
+
+__all__ = (
+    'Colour',
+    'Color',
+)
 
 class Colour:
     """Represents a Discord role colour. This class is similar
@@ -61,7 +64,7 @@ class Colour:
 
     def __init__(self, value):
         if not isinstance(value, int):
-            raise TypeError('Expected int parameter, received %s instead.' % value.__class__.__name__)
+            raise TypeError(f'Expected int parameter, received {value.__class__.__name__} instead.')
 
         self.value = value
 
@@ -75,10 +78,10 @@ class Colour:
         return not self.__eq__(other)
 
     def __str__(self):
-        return '#{:0>6x}'.format(self.value)
+        return f'#{self.value:0>6x}'
 
     def __repr__(self):
-        return '<Colour value=%s>' % self.value
+        return f'<Colour value={self.value}>'
 
     def __hash__(self):
         return hash(self.value)
@@ -120,16 +123,30 @@ class Colour:
         return cls.from_rgb(*(int(x * 255) for x in rgb))
 
     @classmethod
-    def random(cls):
-        """A factory method that returns a :class:`Colour` with a random value.
-        
-        .. versionadded:: 1.6"""
-        return cls(random.randint(0x000000,0xffffff))
-
-    @classmethod
     def default(cls):
         """A factory method that returns a :class:`Colour` with a value of ``0``."""
         return cls(0)
+
+    @classmethod
+    def random(cls, *, seed=None):
+        """A factory method that returns a :class:`Colour` with a random hue.
+
+        .. note::
+
+            The random algorithm works by choosing a colour with a random hue but
+            with maxed out saturation and value.
+
+        .. versionadded:: 1.6
+
+        Parameters
+        ------------
+        seed: Optional[Union[:class:`int`, :class:`str`, :class:`float`, :class:`bytes`, :class:`bytearray`]]
+            The seed to initialize the RNG with. If ``None`` is passed the default RNG is used.
+
+            .. versionadded:: 1.7
+        """
+        rand = random if seed is None else random.Random(seed)
+        return cls.from_hsv(rand.random(), 1, 1)
 
     @classmethod
     def teal(cls):
