@@ -369,7 +369,6 @@ class MessageReference:
         """
         self = cls(message_id=message.id, channel_id=message.channel.id, guild_id=getattr(message.guild, 'id', None), fail_if_not_exists=fail_if_not_exists)
         self._state = message._state
-        return self
 
     @classmethod 
     def from_message(cls, message): 
@@ -963,7 +962,7 @@ class Message(Hashable):
         if self.type is MessageType.guild_discovery_grace_period_final_warning:
             return 'This server has failed Discovery activity requirements for 3 weeks in a row. If this server fails for 1 more week, it will be removed from Discovery.'
 
-    async def delete(self, *, delay=None):
+    async def delete(self, *, delay=None, silent=False):
         """|coro|
 
         Deletes the message.
