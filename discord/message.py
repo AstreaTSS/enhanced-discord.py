@@ -963,7 +963,7 @@ class Message(Hashable):
         if self.type is MessageType.guild_discovery_grace_period_final_warning:
             return 'This server has failed Discovery activity requirements for 3 weeks in a row. If this server fails for 1 more week, it will be removed from Discovery.'
 
-    async def delete(self, *, delay=None):
+    async def delete(self, *, delay=None, silent=False):
         """|coro|
 
         Deletes the message.
