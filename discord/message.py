@@ -369,6 +369,7 @@ class MessageReference:
         """
         self = cls(message_id=message.id, channel_id=message.channel.id, guild_id=getattr(message.guild, 'id', None), fail_if_not_exists=fail_if_not_exists)
         self._state = message._state
+        return self
 
     @classmethod 
     def from_message(cls, message): 
