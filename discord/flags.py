@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -492,7 +492,7 @@ class Intents(BaseFlags):
         - :attr:`Member.nick`
         - :attr:`Member.premium_since`
         - :attr:`User.name`
-        - :attr:`User.avatar` (:meth:`User.avatar_url` and :meth:`User.avatar_url_as`)
+        - :attr:`User.avatar` (:attr:`User.avatar_url` and :meth:`User.avatar_url_as`)
         - :attr:`User.discriminator`
 
         For more information go to the :ref:`member intent documentation <need_members_intent>`.

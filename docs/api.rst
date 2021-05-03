@@ -40,6 +40,10 @@ Client
 
 .. autoclass:: Client
     :members:
+    :exclude-members: fetch_guilds
+
+    .. automethod:: Client.fetch_guilds
+        :async-for:
 
 AutoShardedClient
 ~~~~~~~~~~~~~~~~~~
@@ -200,11 +204,11 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
 .. function:: on_disconnect()
 
-    Called when the client has disconnected from Discord. This could happen either through
-    the internet being disconnected, explicit calls to logout, or Discord terminating the connection
-    one way or the other.
+    Called when the client has disconnected from Discord, or a connection attempt to Discord has failed.
+    This could happen either through the internet being disconnected, explicit calls to close,
+    or Discord terminating the connection one way or the other.
 
-    This function can be called many times.
+    This function can be called many times without a corresponding :func:`on_connect` call.
 
 .. function:: on_shard_disconnect(shard_id)
 
@@ -250,7 +254,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param shard_id: The shard ID that has resumed.
     :type shard_id: :class:`int`
 
-.. function:: on_error(event, \*args, \*\*kwargs)
+.. function:: on_error(event, *args, **kwargs)
 
     Usually when an event raises an uncaught exception, a traceback is
     printed to stderr and the exception is ignored. If you want to
@@ -448,7 +452,10 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     regardless of the state of the internal message cache.
 
     If the message is found in the message cache,
-    it can be accessed via :attr:`RawMessageUpdateEvent.cached_message`
+    it can be accessed via :attr:`RawMessageUpdateEvent.cached_message`. The cached message represents
+    the message before it has been edited. For example, if the content of a message is modified and
+    triggers the :func:`on_raw_message_edit` coroutine, the :attr:`RawMessageUpdateEvent.cached_message`
+    will return a :class:`Message` object that represents the message before the content was modified.
 
     Due to the inherently raw nature of this event, the data parameter coincides with
     the raw data given by the `gateway <https://discord.com/developers/docs/topics/gateway#message-update>`_.
@@ -475,6 +482,14 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
     This requires :attr:`Intents.reactions` to be enabled.
 
+    .. note::
+
+        This doesn't require :attr:`Intents.members` within a guild context,
+        but due to Discord not providing updated user information in a direct message
+        it's required for direct messages to receive this event.
+        Consider using :func:`on_raw_reaction_add` if you need this and do not otherwise want
+        to enable the members intent.
+
     :param reaction: The current state of the reaction.
     :type reaction: :class:`Reaction`
     :param user: The user who added the reaction.
@@ -500,7 +515,12 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
         To get the message being reacted, access it via :attr:`Reaction.message`.
 
-    This requires :attr:`Intents.reactions` to be enabled.
+    This requires both :attr:`Intents.reactions` and :attr:`Intents.members` to be enabled.
+
+    .. note::
+
+        Consider using :func:`on_raw_reaction_remove` if you need this and do not want
+        to enable the members intent.
 
     :param reaction: The current state of the reaction.
     :type reaction: :class:`Reaction`
@@ -883,6 +903,8 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     Called when a :class:`Relationship` is added or removed from the
     :class:`ClientUser`.
 
+    .. deprecated:: 1.7
+
     :param relationship: The relationship that was added or removed.
     :type relationship: :class:`Relationship`
 
@@ -890,6 +912,8 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
     Called when a :class:`Relationship` is updated, e.g. when you
     block a friend or a friendship is accepted.
+
+    .. deprecated:: 1.7
 
     :param before: The previous relationship status.
     :type before: :class:`Relationship`
@@ -909,6 +933,8 @@ Utility Functions
 
 .. autofunction:: discord.utils.oauth_url
 
+.. autofunction:: discord.utils.remove_markdown
+
 .. autofunction:: discord.utils.escape_markdown
 
 .. autofunction:: discord.utils.escape_mentions
@@ -925,6 +951,8 @@ Profile
 .. class:: Profile
 
     A namedtuple representing a user's Discord public profile.
+
+    .. deprecated:: 1.7
 
     .. attribute:: user
 
@@ -1046,6 +1074,12 @@ of :class:`enum.Enum`.
 
         A guild store channel.
 
+    .. attribute:: stage_voice
+
+        A guild stage voice channel.
+
+        .. versionadded:: 1.7
+
 .. class:: MessageType
 
     Specifies the type of :class:`Message`. This is used to denote if a message
@@ -1108,6 +1142,35 @@ of :class:`enum.Enum`.
         The system message denoting that an announcement channel has been followed.
 
         .. versionadded:: 1.3
+    .. attribute:: guild_stream
+
+        The system message denoting that a member is streaming in the guild.
+
+        .. versionadded:: 1.7
+    .. attribute:: guild_discovery_disqualified
+
+        The system message denoting that the guild is no longer eligible for Server
+        Discovery.
+
+        .. versionadded:: 1.7
+    .. attribute:: guild_discovery_requalified
+
+        The system message denoting that the guild has become eligible again for Server
+        Discovery.
+
+        .. versionadded:: 1.7
+    .. attribute:: guild_discovery_grace_period_initial_warning
+
+        The system message denoting that the guild has failed to meet the Server
+        Discovery requirements for one week.
+
+        .. versionadded:: 1.7
+    .. attribute:: guild_discovery_grace_period_final_warning
+
+        The system message denoting that the guild has failed to meet the Server
+        Discovery requirements for 3 weeks in a row.
+
+        .. versionadded:: 1.7
 
 .. class:: ActivityType
 
@@ -1881,6 +1944,8 @@ of :class:`enum.Enum`.
 
     Specifies the type of :class:`Relationship`.
 
+    .. deprecated:: 1.7
+
     .. note::
 
         This only applies to users, *not* bots.
@@ -1907,6 +1972,8 @@ of :class:`enum.Enum`.
     Represents the options found in ``Settings > Privacy & Safety > Safe Direct Messaging``
     in the Discord client.
 
+    .. deprecated:: 1.7
+
     .. note::
 
         This only applies to users, *not* bots.
@@ -1928,6 +1995,8 @@ of :class:`enum.Enum`.
 
     Represents the options found in ``Settings > Privacy & Safety > Who Can Add You As A Friend``
     in the Discord client.
+
+    .. deprecated:: 1.7
 
     .. note::
 
@@ -1958,6 +2027,8 @@ of :class:`enum.Enum`.
 
     Represents the user's Discord Nitro subscription type.
 
+    .. deprecated:: 1.7
+
     .. note::
 
         This only applies to users, *not* bots.
@@ -1974,6 +2045,8 @@ of :class:`enum.Enum`.
 .. class:: Theme
 
     Represents the theme synced across all Discord clients.
+
+    .. deprecated:: 1.7
 
     .. note::
 
@@ -2851,10 +2924,29 @@ Guild
 
 .. autoclass:: Guild()
     :members:
-    :exclude-members: audit_logs
+    :exclude-members: fetch_members, audit_logs
+
+    .. automethod:: fetch_members
+        :async-for:
 
     .. automethod:: audit_logs
         :async-for:
+
+.. class:: BanEntry
+
+    A namedtuple which represents a ban returned from :meth:`~Guild.bans`.
+
+    .. attribute:: reason
+
+        The reason this user was banned.
+
+        :type: Optional[:class:`str`]
+    .. attribute:: user
+
+        The :class:`User` that was banned.
+
+        :type: :class:`User`
+
 
 Integration
 ~~~~~~~~~~~~
@@ -2924,6 +3016,8 @@ Role
 RoleTags
 ~~~~~~~~~~
 
+.. attributetable:: RoleTags
+
 .. autoclass:: RoleTags()
     :members:
 
@@ -2943,12 +3037,30 @@ TextChannel
     .. automethod:: typing
         :async-with:
 
+StoreChannel
+~~~~~~~~~~~~~
+
+.. attributetable:: StoreChannel
+
+.. autoclass:: StoreChannel()
+    :members:
+    :inherited-members:
+
 VoiceChannel
 ~~~~~~~~~~~~~
 
 .. attributetable:: VoiceChannel
 
 .. autoclass:: VoiceChannel()
+    :members:
+    :inherited-members:
+
+StageChannel
+~~~~~~~~~~~~~
+
+.. attributetable:: StageChannel
+
+.. autoclass:: StageChannel()
     :members:
     :inherited-members:
 
@@ -3151,11 +3263,15 @@ AllowedMentions
 MessageReference
 ~~~~~~~~~~~~~~~~~
 
+.. attributetable:: MessageReference
+
 .. autoclass:: MessageReference
     :members:
 
 PartialMessage
 ~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialMessage
 
 .. autoclass:: PartialMessage
     :members:
@@ -3163,11 +3279,15 @@ PartialMessage
 Intents
 ~~~~~~~~~~
 
+.. attributetable:: Intents
+
 .. autoclass:: Intents
     :members:
 
 MemberCacheFlags
 ~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberCacheFlags
 
 .. autoclass:: MemberCacheFlags
     :members:
@@ -3247,11 +3367,15 @@ PermissionOverwrite
 ShardInfo
 ~~~~~~~~~~~
 
+.. attributetable:: ShardInfo
+
 .. autoclass:: ShardInfo()
     :members:
 
 SystemChannelFlags
 ~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: SystemChannelFlags
 
 .. autoclass:: SystemChannelFlags()
     :members:
@@ -3259,11 +3383,15 @@ SystemChannelFlags
 MessageFlags
 ~~~~~~~~~~~~
 
+.. attributetable:: MessageFlags
+
 .. autoclass:: MessageFlags()
     :members:
 
 PublicUserFlags
 ~~~~~~~~~~~~~~~
+
+.. attributetable:: PublicUserFlags
 
 .. autoclass:: PublicUserFlags()
     :members:

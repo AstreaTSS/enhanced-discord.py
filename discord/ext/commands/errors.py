@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-2020 Rapptz
+Copyright (c) 2015-present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -45,6 +45,7 @@ __all__ = (
     'NotOwner',
     'MessageNotFound',
     'MemberNotFound',
+    'GuildNotFound',
     'UserNotFound',
     'ChannelNotFound',
     'ChannelNotReadable',
@@ -229,6 +230,22 @@ class MemberNotFound(BadArgument):
     def __init__(self, argument):
         self.argument = argument
         super().__init__('Member "{}" not found.'.format(argument))
+
+class GuildNotFound(BadArgument):
+    """Exception raised when the guild provided was not found in the bot's cache.
+
+    This inherits from :exc:`BadArgument`
+
+    .. versionadded:: 1.7
+
+    Attributes
+    -----------
+    argument: :class:`str`
+        The guild supplied by the called that was not found
+    """
+    def __init__(self, argument):
+        self.argument = argument
+        super().__init__('Guild "{}" not found.'.format(argument))
 
 class UserNotFound(BadArgument):
     """Exception raised when the user provided was not found in the bot's
