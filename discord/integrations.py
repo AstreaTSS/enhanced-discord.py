@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -29,6 +27,11 @@ from .utils import _get_as_snowflake, get, parse_time
 from .user import User
 from .errors import InvalidArgument
 from .enums import try_enum, ExpireBehaviour
+
+__all__ = (
+    'IntegrationAccount',
+    'Integration',
+)
 
 class IntegrationAccount:
     """Represents an integration account.
@@ -84,7 +87,7 @@ class Integration:
     account: :class:`IntegrationAccount`
         The integration account information.
     synced_at: :class:`datetime.datetime`
-        When the integration was last synced.
+        An aware UTC datetime representing when the integration was last synced.
     """
 
     __slots__ = ('id', '_state', 'guild', 'name', 'enabled', 'type',
@@ -186,7 +189,7 @@ class Integration:
             Syncing the integration failed.
         """
         await self._state.http.sync_integration(self.guild.id, self.id)
-        self.synced_at = datetime.datetime.utcnow()
+        self.synced_at = datetime.datetime.now(datetime.timezone.utc)
 
     async def delete(self):
         """|coro|

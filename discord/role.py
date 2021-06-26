@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -29,6 +27,11 @@ from .errors import InvalidArgument
 from .colour import Colour
 from .mixins import Hashable
 from .utils import snowflake_time, _get_as_snowflake
+
+__all__ = (
+    'RoleTags',
+    'Role',
+)
 
 class RoleTags:
     """Represents tags on a role.
@@ -251,7 +254,7 @@ class Role(Hashable):
     @property
     def mention(self):
         """:class:`str`: Returns a string that allows you to mention a role."""
-        return '<@&%s>' % self.id
+        return f'<@&{self.id}>'
 
     @property
     def members(self):

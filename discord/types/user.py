@@ -22,7 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-# This is merely a tag type to avoid circular import issues.
-# Yes, this is a terrible solution but ultimately it is the only solution.
-class _BaseCommand:
-    __slots__ = ()
+from .snowflake import Snowflake
+from typing import Optional, TypedDict
+
+
+class PartialUser(TypedDict):
+    id: Snowflake
+    username: str
+    discriminator: str
+    avatar: Optional[str]

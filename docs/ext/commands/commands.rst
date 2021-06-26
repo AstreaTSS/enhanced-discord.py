@@ -379,7 +379,10 @@ A lot of discord models work out of the gate as a parameter:
 - :class:`PartialMessage` (since v1.7)
 - :class:`TextChannel`
 - :class:`VoiceChannel`
+<<<<<<< HEAD
 - :class:`StageChannel` (since v1.7)
+=======
+>>>>>>> 523e35e4f3c3c49d4e471359f9fb559242bbecc8
 - :class:`StoreChannel` (since v1.7)
 - :class:`CategoryChannel`
 - :class:`Invite`
@@ -411,10 +414,15 @@ converter is given below:
 +--------------------------+-------------------------------------------------+
 | :class:`VoiceChannel`    | :class:`~ext.commands.VoiceChannelConverter`    |
 +--------------------------+-------------------------------------------------+
+<<<<<<< HEAD
 | :class:`StageChannel`    | :class:`~ext.commands.StageChannelConverter`    |
 +--------------------------+-------------------------------------------------+
 | :class:`StoreChannel`    | :class:`~ext.commands.StoreChannelConverter`    |
 +--------------------------+-------------------------------------------------+
+=======
+| :class:`StoreChannel`    | :class:`~ext.commands.StoreChannelConverter`    |
++--------------------------+-------------------------------------------------+
+>>>>>>> 523e35e4f3c3c49d4e471359f9fb559242bbecc8
 | :class:`CategoryChannel` | :class:`~ext.commands.CategoryChannelConverter` |
 +--------------------------+-------------------------------------------------+
 | :class:`Invite`          | :class:`~ext.commands.InviteConverter`          |

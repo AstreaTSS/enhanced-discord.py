@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -28,6 +26,10 @@ from .asset import Asset
 from . import utils
 from .partial_emoji import _EmojiTag
 from .user import User
+
+__all__ = (
+    'Emoji',
+)
 
 class Emoji(_EmojiTag):
     """Represents a custom emoji.

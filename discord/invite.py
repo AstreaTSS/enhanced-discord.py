@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -29,6 +27,12 @@ from .utils import parse_time, snowflake_time, _get_as_snowflake
 from .object import Object
 from .mixins import Hashable
 from .enums import ChannelType, VerificationLevel, try_enum
+
+__all__ = (
+    'PartialInviteChannel',
+    'PartialInviteGuild',
+    'Invite',
+)
 
 class PartialInviteChannel:
     """Represents a "partial" invite channel.
@@ -80,7 +84,7 @@ class PartialInviteChannel:
     @property
     def mention(self):
         """:class:`str`: The string that allows you to mention the channel."""
-        return '<#%s>' % self.id
+        return f'<#{self.id}>'
 
     @property
     def created_at(self):
@@ -267,7 +271,7 @@ class Invite(Hashable):
     revoked: :class:`bool`
         Indicates if the invite has been revoked.
     created_at: :class:`datetime.datetime`
-        A datetime object denoting the time the invite was created.
+        An aware UTC datetime object denoting the time the invite was created.
     temporary: :class:`bool`
         Indicates that the invite grants temporary membership.
         If ``True``, members who joined via this invite will be kicked upon disconnect.

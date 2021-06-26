@@ -32,6 +32,10 @@ Likewise, **this is the last version to support user bots**.
 
 Development of v2.0 will have breaking changes and support for newer API features.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 523e35e4f3c3c49d4e471359f9fb559242bbecc8
 - Add support for stage channels via :class:`StageChannel` (:issue:`6602`, :issue:`6608`)
 - Add support for :attr:`MessageReference.fail_if_not_exists` (:issue:`6484`)
     - By default, if the message you're replying to doesn't exist then the API errors out.
