@@ -13,11 +13,7 @@ __title__ = 'discord'
 __author__ = 'Rapptz'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2015-present Rapptz'
-<<<<<<< HEAD
-__version__ = '1.7.1.7'
-=======
-__version__ = '2.0.0.7a'
->>>>>>> 523e35e4f3c3c49d4e471359f9fb559242bbecc8
+__version__ = '1.7.3.7'
 
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
@@ -63,10 +59,6 @@ from .interactions import *
 
 VersionInfo = namedtuple('VersionInfo', 'major minor micro enhanced releaselevel serial')
 
-<<<<<<< HEAD
-version_info = VersionInfo(major=1, minor=7, micro=1, enhanced=7, releaselevel='final', serial=0)
-=======
-version_info = VersionInfo(major=2, minor=0, micro=0, enhanced=7, releaselevel='alpha', serial=0)
->>>>>>> 523e35e4f3c3c49d4e471359f9fb559242bbecc8
+version_info = VersionInfo(major=1, minor=7, micro=3, enhanced=7, releaselevel='final', serial=0)
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
