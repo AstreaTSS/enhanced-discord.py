@@ -107,7 +107,7 @@ class BotBase(GroupMixin):
         self.extra_events = {}
         self.__cogs = {}
         self.__extensions = {}
-        self.__shortcuts = {}
+        self._shortcuts = {}
         self._checks = []
         self._check_once = []
         self._before_invoke = None
@@ -148,7 +148,7 @@ class BotBase(GroupMixin):
             raise ValueError("Name must be a string")
         if not isinstance(config_dict, dict):
             raise ValueError("config_dict must be a dict")
-        self.__shortcuts[name] = config_dict
+        self._shortcuts[name] = config_dict
 
     @property
     def owner(self):
