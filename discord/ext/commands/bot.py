@@ -24,8 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import collections
-import inspect
 import importlib.util
+import inspect
 import itertools
 import sys
 import traceback
@@ -33,12 +33,12 @@ import types
 
 import discord
 
-from .core import GroupMixin
-from .view import StringView
-from .context import Context
 from . import errors
-from .help import HelpCommand, DefaultHelpCommand
 from .cog import Cog
+from .context import Context
+from .core import GroupMixin
+from .help import DefaultHelpCommand, HelpCommand
+from .view import StringView
 
 __all__ = (
     'when_mentioned',
@@ -107,6 +107,7 @@ class BotBase(GroupMixin):
         self.extra_events = {}
         self.__cogs = {}
         self.__extensions = {}
+        self.__shortcuts = {}
         self._checks = []
         self._check_once = []
         self._before_invoke = None
@@ -132,7 +133,23 @@ class BotBase(GroupMixin):
             self.help_command = DefaultHelpCommand()
         else:
             self.help_command = help_command
-            
+
+    def add_guild_shortcut(self, name, config_dict):
+        """Add a shortcut attribute to context.guild
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the shortcut you want to add to context.guild
+        config_dict: :class:`dict`
+            The dict of {guild.id: other_data} where context.guild.<shortcut> will get the data from
+        """
+        if not isinstance(name, str):
+            raise ValueError("Name must be a string")
+        if not isinstance(config_dict, dict):
+            raise ValueError("config_dict must be a dict")
+        self.__shortcuts[name] = config_dict
+
     @property
     def owner(self):
         """:class:`discord.User`: The owner, retrieved from owner_id. In case of improper caching, this can return None
@@ -155,7 +172,7 @@ class BotBase(GroupMixin):
             if owner:
                 owners.append(owner)
         return owners
-    
+
     # internal helpers
 
     def dispatch(self, event_name, *args, **kwargs):

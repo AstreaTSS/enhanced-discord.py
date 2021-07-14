@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import re 
+import re
 
 import discord.abc
 import discord.utils
@@ -99,7 +99,7 @@ class Context(discord.abc.Messageable):
     @property
     def clean_prefix(self):
         """:class:`str`: The cleaned up invoke prefix. i.e. mentions are ``@name`` instead of ``<@id>``.
-        
+
         .. versionadded:: 1.5.1.4"""
         user = self.guild.me if self.guild else self.bot.user
         pattern = re.compile(r"<@!?%s>" % user.id)
@@ -227,7 +227,11 @@ class Context(discord.abc.Messageable):
     @discord.utils.cached_property
     def guild(self):
         """Optional[:class:`.Guild`]: Returns the guild associated with this context's command. None if not available."""
-        return self.message.guild
+        guild = self.message.guild
+        if self.bot.__shortcuts:
+            for name, config in self.bot.__shortcuts.keys():
+                setattr(guild, name, config.get(guild.id))
+        return guild
 
     @discord.utils.cached_property
     def channel(self):
