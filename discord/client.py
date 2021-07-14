@@ -249,7 +249,6 @@ class Client:
 
         self._connection = self._get_state(**options)
         self._connection.shard_count = self.shard_count
-        self._connection.shortcuts = {}
         self._closed = False
         self._ready = asyncio.Event()
         self._connection._get_websocket = self._get_websocket
@@ -258,24 +257,6 @@ class Client:
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
             log.warning("PyNaCl is not installed, voice will NOT be supported")
-
-    def add_guild_shortcut(self, name, config_dict):
-        """Add a shortcut attribute to context.guild
-
-        .. versionadded:: 1.7.3.8
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the shortcut you want to add to context.guild
-        config_dict: :class:`dict`
-            The dict of {guild.id: other_data} where context.guild.<shortcut> will get the data from
-        """
-        if not isinstance(name, str):
-            raise ValueError("Name must be a string")
-        if not isinstance(config_dict, dict):
-            raise ValueError("config_dict must be a dict")
-        self._connection.shortcuts[name] = config_dict
 
     # internals
 
