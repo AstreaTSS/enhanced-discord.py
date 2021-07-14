@@ -191,7 +191,11 @@ class Guild(Hashable):
         self._from_data(data)
         if state.shortcuts:
             for name, config in state.shortcuts.items():
-                setattr(self, name, config.get(self.id))
+                if name in self.__slots__:
+                    continue
+                else:
+                    self.__slots__ += (name,)
+                    setattr(self, name, config.get(self.id))
 
     def _add_channel(self, channel):
         self._channels[channel.id] = channel
