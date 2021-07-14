@@ -227,11 +227,7 @@ class Context(discord.abc.Messageable):
     @discord.utils.cached_property
     def guild(self):
         """Optional[:class:`.Guild`]: Returns the guild associated with this context's command. None if not available."""
-        guild = self.message.guild
-        if self.bot._shortcuts:
-            for name, config in self.bot._shortcuts.items():
-                setattr(guild, name, config.get(guild.id))
-        return guild
+        return self.message.guild
 
     @discord.utils.cached_property
     def channel(self):

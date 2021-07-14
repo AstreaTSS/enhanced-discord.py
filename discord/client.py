@@ -24,36 +24,35 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import logging
+import os
+import re
 import signal
 import sys
 import traceback
-import os
-import re
 
 import aiohttp
 
-from .user import User
-from .invite import Invite
-from .template import Template
-from .widget import Widget
-from .guild import Guild
-from .channel import _channel_factory
-from .enums import ChannelType
-from .mentions import AllowedMentions
-from .errors import *
-from .enums import Status, VoiceRegion
-from .gateway import *
-from .activity import BaseActivity, create_activity
-from .voice_client import VoiceClient
-from .http import HTTPClient
-from .state import ConnectionState
 from . import utils
-from .object import Object
-from .backoff import ExponentialBackoff
-from .webhook import Webhook
-from .iterators import GuildIterator
+from .activity import BaseActivity, create_activity
 from .appinfo import AppInfo
+from .backoff import ExponentialBackoff
+from .channel import _channel_factory
 from .colour import Color, Colour
+from .enums import ChannelType, Status, VoiceRegion
+from .errors import *
+from .gateway import *
+from .guild import Guild
+from .http import HTTPClient
+from .invite import Invite
+from .iterators import GuildIterator
+from .mentions import AllowedMentions
+from .object import Object
+from .state import ConnectionState
+from .template import Template
+from .user import User
+from .voice_client import VoiceClient
+from .webhook import Webhook
+from .widget import Widget
 
 __all__ = (
     'Client',
@@ -250,6 +249,7 @@ class Client:
 
         self._connection = self._get_state(**options)
         self._connection.shard_count = self.shard_count
+        self._connection.shortcuts = {}
         self._closed = False
         self._ready = asyncio.Event()
         self._connection._get_websocket = self._get_websocket
@@ -258,6 +258,24 @@ class Client:
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
             log.warning("PyNaCl is not installed, voice will NOT be supported")
+
+    def add_guild_shortcut(self, name, config_dict):
+        """Add a shortcut attribute to context.guild
+
+        .. versionadded:: 1.7.3.8
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the shortcut you want to add to context.guild
+        config_dict: :class:`dict`
+            The dict of {guild.id: other_data} where context.guild.<shortcut> will get the data from
+        """
+        if not isinstance(name, str):
+            raise ValueError("Name must be a string")
+        if not isinstance(config_dict, dict):
+            raise ValueError("config_dict must be a dict")
+        self._connection.shortcuts[name] = config_dict
 
     # internals
 
@@ -1363,7 +1381,7 @@ class Client:
         """|coro|
 
         Retrieves a :class:`~discord.User` based on their ID. This can only
-        be used by bot accounts. 
+        be used by bot accounts.
 
         .. versionadded:: 1.5.0.1
 

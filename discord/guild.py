@@ -26,23 +26,23 @@ import copy
 from collections import namedtuple
 
 from . import utils
-from .role import Role
-from .member import Member, VoiceState
-from .emoji import Emoji
-from .errors import InvalidData
-from .permissions import PermissionOverwrite
-from .colour import Colour
-from .errors import InvalidArgument, ClientException
-from .channel import *
-from .enums import VoiceRegion, ChannelType, try_enum, VerificationLevel, ContentFilter, NotificationLevel
-from .mixins import Hashable
-from .user import User
-from .invite import Invite
-from .iterators import AuditLogIterator, MemberIterator
-from .widget import Widget
 from .asset import Asset
+from .channel import *
+from .colour import Colour
+from .emoji import Emoji
+from .enums import (ChannelType, ContentFilter, NotificationLevel,
+                    VerificationLevel, VoiceRegion, try_enum)
+from .errors import ClientException, InvalidArgument, InvalidData
 from .flags import SystemChannelFlags
 from .integrations import Integration
+from .invite import Invite
+from .iterators import AuditLogIterator, MemberIterator
+from .member import Member, VoiceState
+from .mixins import Hashable
+from .permissions import PermissionOverwrite
+from .role import Role
+from .user import User
+from .widget import Widget
 
 __all__ = (
     'Guild',
@@ -189,6 +189,9 @@ class Guild(Hashable):
         self._voice_states = {}
         self._state = state
         self._from_data(data)
+        if state.shortcuts:
+            for name, config in state.shortcuts.items():
+                setattr(self, name, config.get(self.id))
 
     def _add_channel(self, channel):
         self._channels[channel.id] = channel

@@ -107,7 +107,6 @@ class BotBase(GroupMixin):
         self.extra_events = {}
         self.__cogs = {}
         self.__extensions = {}
-        self._shortcuts = {}
         self._checks = []
         self._check_once = []
         self._before_invoke = None
@@ -133,22 +132,6 @@ class BotBase(GroupMixin):
             self.help_command = DefaultHelpCommand()
         else:
             self.help_command = help_command
-
-    def add_guild_shortcut(self, name, config_dict):
-        """Add a shortcut attribute to context.guild
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the shortcut you want to add to context.guild
-        config_dict: :class:`dict`
-            The dict of {guild.id: other_data} where context.guild.<shortcut> will get the data from
-        """
-        if not isinstance(name, str):
-            raise ValueError("Name must be a string")
-        if not isinstance(config_dict, dict):
-            raise ValueError("config_dict must be a dict")
-        self._shortcuts[name] = config_dict
 
     @property
     def owner(self):
