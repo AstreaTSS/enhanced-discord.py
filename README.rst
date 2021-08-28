@@ -6,9 +6,9 @@ Enhanced-dpy (custom discord.py)
    :alt: PyPI supported Python versions
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
-Credits to the `original lib by Rapptz <https://github.com/iDutchy/discord.py>`_
+Credits to the `original lib by Rapptz <https://github.com/Rapptz/discord.py>`_
 
-**WARNING: This is not the official discord.py lib! This is a custom version to which I add some features that might be useful or just makes things easier for the lazy people. See below which features have been added. This lib will also be kept updated with the BETA version of the original lib! So things may be unstable, please keep that in mind.**
+**WARNING: This is not the official discord.py library! As of 8/27/2021 Danny (Rapptz) has stopped development due to breaking changes. You are still able to read the official library at <https://github.com/Rapptz/discord.py>!**
 
 Custom Features
 ----------------
@@ -42,8 +42,8 @@ To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone https://github.com/iDutchy/discord.py
-    $ cd discord.py
+    $ git clone https://github.com/iDevision/enhanced-discord.py
+    $ cd enhanced-discord.py
     $ python3 -m pip install -U .[voice]
 
 
