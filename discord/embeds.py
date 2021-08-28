@@ -471,7 +471,7 @@ class Embed:
         except AttributeError:
             pass
 
-    def set_embed(self: E, *, url: MaybeEmpty[Any]):
+    def set_thumbnail(self: E, *, url: MaybeEmpty[Any]):
         """Sets the thumbnail for the embed content.
 
         This function returns the class instance to allow for fluent-style
