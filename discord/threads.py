@@ -74,6 +74,10 @@ class Thread(Messageable, Hashable):
 
             Returns the thread's hash.
 
+        .. describe:: int(x)
+
+            Returns the thread's ID.
+
         .. describe:: str(x)
 
             Returns the thread's name.
@@ -747,6 +751,10 @@ class ThreadMember(Hashable):
         .. describe:: hash(x)
 
             Returns the thread member's hash.
+
+        .. describe:: int(x)
+
+            Returns the thread member's ID.
 
         .. describe:: str(x)
 

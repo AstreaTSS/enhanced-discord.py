@@ -145,6 +145,10 @@ class Role(Hashable):
 
             Returns the role's ID.
 
+        .. describe:: int(x)
+
+            Returns the role's ID.
+
     Attributes
     ----------
     id: :class:`int`

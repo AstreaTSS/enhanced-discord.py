@@ -115,6 +115,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
 
             Returns the channel's name.
 
+        .. describe:: int(x)
+
+            Returns the channel's ID.
+
     Attributes
     -----------
     name: :class:`str`
@@ -1334,6 +1338,10 @@ class CategoryChannel(discord.abc.GuildChannel, Hashable):
 
             Returns the category's name.
 
+        .. describe:: int(x)
+
+            Returns the category's ID.
+
     Attributes
     -----------
     name: :class:`str`
@@ -1556,6 +1564,10 @@ class StoreChannel(discord.abc.GuildChannel, Hashable):
 
             Returns the channel's name.
 
+        .. describe:: int(x)
+
+            Returns the channel's ID.
+
     Attributes
     -----------
     name: :class:`str`
@@ -1728,6 +1740,10 @@ class DMChannel(discord.abc.Messageable, Hashable):
 
             Returns a string representation of the channel
 
+        .. describe:: int(x)
+
+            Returns the channel's ID.
+
     Attributes
     ----------
     recipient: Optional[:class:`User`]
@@ -1853,6 +1869,10 @@ class GroupChannel(discord.abc.Messageable, Hashable):
         .. describe:: str(x)
 
             Returns a string representation of the channel
+
+        .. describe:: int(x)
+
+            Returns the channel's ID.
 
     Attributes
     ----------
@@ -1999,6 +2019,10 @@ class PartialMessageable(discord.abc.Messageable, Hashable):
         .. describe:: hash(x)
 
             Returns the partial messageable's hash.
+
+        .. describe:: int(x)
+
+            Returns the messageable's ID.
 
     Attributes
     -----------
