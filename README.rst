@@ -1,22 +1,35 @@
 discord.py
 ==========
 
-.. image:: https://discord.com/api/guilds/336642139381301249/embed.png
-   :target: https://discord.gg/r3sSKJJ
+.. image:: https://discord.com/api/guilds/514232441498763279/embed.png
+   :target: https://discord.gg/PYAfZzpsjG
    :alt: Discord server invite
-.. image:: https://img.shields.io/pypi/v/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+.. image:: https://img.shields.io/pypi/v/enhanced-dpy.svg
+   :target: https://pypi.python.org/pypi/enhanced-dpy
    :alt: PyPI version info
-.. image:: https://img.shields.io/pypi/pyversions/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+.. image:: https://img.shields.io/pypi/pyversions/enhanced-dpy.svg
+   :target: https://pypi.python.org/pypi/enhanced-dpy
    :alt: PyPI supported Python versions
 
-A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
+A modern, maintained, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
-The Future of discord.py
+The Future of enhanced-discord.py
 --------------------------
 
-Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_ for the future of this project. It's been a good one.
+Enhanced discord.py is a fork of Rapptz's discord.py, that went unmaintained (`gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_)
+
+It is currently maintained by (in alphabetical order)
+
+- Chillymosh#8175
+- Daggy#9889
+- dank Had0cK#6081
+- Dutchy#6127
+- Eyesofcreeper#0001
+- Gnome!#6669
+- IAmTomahawkx#1000
+- Jadon#2494
+
+An overview of added features is available on the `custom features page <https://enhanced-dpy.readthedocs.io/en/latest/index.html#custom-features>`_.
 
 Key Features
 -------------
@@ -35,27 +48,17 @@ To install the library without full voice support, you can just run the followin
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U discord.py
+    python3 -m pip install -U enhanced-dpy
 
     # Windows
-    py -3 -m pip install -U discord.py
-
-Otherwise to get voice support you should run the following command:
-
-.. code:: sh
-
-    # Linux/macOS
-    python3 -m pip install -U "discord.py[voice]"
-
-    # Windows
-    py -3 -m pip install -U discord.py[voice]
+    py -3 -m pip install -U enhanced-dpy
 
 
 To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone https://github.com/Rapptz/discord.py
+    $ git clone https://github.com/iDevision/enhanced-discord.py
     $ cd discord.py
     $ python3 -m pip install -U .[voice]
 
@@ -113,6 +116,6 @@ You can find more examples in the examples directory.
 Links
 ------
 
-- `Documentation <https://discordpy.readthedocs.io/en/latest/index.html>`_
-- `Official Discord Server <https://discord.gg/r3sSKJJ>`_
+- `Documentation <https://enhanced-dpy.readthedocs.io/en/latest/index.html>`_
+- `Official Discord Server <https://discord.gg/PYAfZzpsjG>`_
 - `Discord API <https://discord.gg/discord-api>`_
