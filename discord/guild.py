@@ -140,6 +140,10 @@ class Guild(Hashable):
 
             Returns the guild's name.
 
+        .. describe:: int(x)
+
+            Returns the guild's ID.
+
     Attributes
     ----------
     name: :class:`str`
@@ -334,6 +338,9 @@ class Guild(Hashable):
 
     def __str__(self) -> str:
         return self.name or ''
+
+    def __int__(self) -> int:
+        return self.id
 
     def __repr__(self) -> str:
         attrs = (
