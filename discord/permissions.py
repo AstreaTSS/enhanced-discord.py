@@ -299,6 +299,8 @@ class Permissions(BaseFlags):
         """
         return 1 << 3
 
+    admin = administrator
+
     @flag_value
     def manage_channels(self) -> int:
         """:class:`bool`: Returns ``True`` if a user can edit, delete, or create channels in the guild.
