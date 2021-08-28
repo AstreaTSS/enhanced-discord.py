@@ -8,7 +8,7 @@ Enhanced-dpy (custom discord.py)
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 Credits to the `original lib by Rapptz <https://github.com/Rapptz/discord.py>`_
 
-**WARNING: This is not the official discord.py library! As of 8/27/2021 Danny (Rapptz) has stopped development due to breaking changes. You are still able to read the official library at <https://github.com/Rapptz/discord.py>!**
+**WARNING: This is not the official discord.py library! As of 8/27/2021 Danny (Rapptz) has stopped development due to breaking changes. You are still able to read the official library at https://github.com/Rapptz/discord.py!**
 
 Custom Features
 ----------------
