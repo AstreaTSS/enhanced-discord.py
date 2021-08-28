@@ -503,6 +503,14 @@ class Message(Hashable):
 
             Returns the message's hash.
 
+        .. describe:: str(x)
+
+            Returns the message's content.
+
+        .. describe:: int(x)
+
+            Returns the message's ID.
+
     Attributes
     -----------
     tts: :class:`bool`
@@ -711,6 +719,12 @@ class Message(Hashable):
         return (
             f'<{name} id={self.id} channel={self.channel!r} type={self.type!r} author={self.author!r} flags={self.flags!r}>'
         )
+
+    def __int__(self) -> int:
+        return self.id
+
+    def __str__(self) -> Optional[str]:
+        return self.content
 
     def _try_patch(self, data, key, transform=None) -> None:
         try:
