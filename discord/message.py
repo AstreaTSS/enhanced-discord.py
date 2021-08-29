@@ -1106,7 +1106,7 @@ class Message(Hashable):
         if self.type is MessageType.guild_invite_reminder:
             return 'Wondering who to invite?\nStart by inviting anyone who can help you build the server!'
 
-    async def delete(self, *, delay: Optional[float] = None) -> None:
+    async def delete(self, *, delay: Optional[float] = None, silent: bool = False) -> None:
         """|coro|
 
         Deletes the message.
@@ -1117,12 +1117,17 @@ class Message(Hashable):
 
         .. versionchanged:: 1.1
             Added the new ``delay`` keyword-only parameter.
+        .. versionchanged:: 2.0
+            Added the new ``silent`` keyword-only parameter.
 
         Parameters
         -----------
         delay: Optional[:class:`float`]
             If provided, the number of seconds to wait in the background
             before deleting the message. If the deletion fails then it is silently ignored.
+        silent: :class:`bool`
+            If silent is set to ``True``, the error will not be raised, it will be ignored.
+            This defaults to ``False``
 
         Raises
         ------
@@ -1144,7 +1149,11 @@ class Message(Hashable):
 
             asyncio.create_task(delete(delay))
         else:
-            await self._state.http.delete_message(self.channel.id, self.id)
+            try:
+                await self._state.http.delete_message(self.channel.id, self.id)
+            except Exception:
+                if not silent:
+                    raise
 
     @overload
     async def edit(
