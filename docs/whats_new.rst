@@ -11,6 +11,134 @@ Changelog
 This page keeps a detailed human friendly rendering of what's new and changed
 in specific versions.
 
+.. _vp2p0p0:
+
+v2.0.0
+--------
+
+This version was partly developed by Danny, and partly by the enhanced-discord.py contributors.
+The library has been updated with breaking changes, and as such the major version was changed.
+
+
+- Performance of the library has improved significantly (all times with 1 process and 1 AutoShardedBot):
+    - 735 guilds boot up time (with chunking): 57s/1.7 GiB RAM -> 42s/1.4 GiB RAM
+    - 27k guilds boot up time (with chunking): 477s/8 GiB RAM -> 303s/7.2 GiB RAM
+    - 48k guilds boot up time (without chunking): 109s -> 67s
+    - 106k guilds boot up time (without chunking): 3300s -> 3090s
+- The entire public API of the library is now completely type hinted.
+    - There may still be bugs however.
+    - For best type hinting experience consider using Pyright.
+- Almost all edit methods now return their updated counterpart rather than doing an in-place edit.
+- Japanese docs were removed, as we are no longer able to keep them in sync.
+
+
+Breaking Changes
+~~~~~~~~~~~~~~~~~
+
+- :meth:`Asset.replace` now only accepts keyword arguments
+- ``Asset.with_`` functions now only accept positional only arguments
+- :meth:`TextChannel.get_partial_message` is now pos-only
+- :meth:`TextChannel.get_thread` is now pos-only
+- ``permissions_for`` is now pos-only
+- :attr:`GroupChannel.owner` is now Optional
+- ``edit`` methods now only accept None if it actually means something (e.g. clearing it)
+- ``timeout`` parameter for ``ui.View.__init__`` is now keyword only
+- When an interaction has already been responded and another one is sent, :exc:`InteractionResponded`is now raised.
+    - Discord's API only allows a single :attr:`interaction.response`.
+- Separate :func:`on_member_update` and :func:`on_presence_update`
+    - The new event :func:`on_presence_update` is now called when status/activity is changed.
+    - :func:`on_member_update` will now no longer have status/activity changes.
+- afk parameter in :meth:`Client.change_presence` is removed
+- The undocumented private :func:`on_socket_response` event got removed.
+    - Consider using the newer documented :func:`on_socket_event_type` event instead.
+- Using :func:`on_socket_raw_receive` and :func:`on_socket_raw_send` are now opt-in via :attr:`enable_debug_events` toggle.
+- :func:`on_socket_raw_receive` is now only dispatched after decompressing the payload.
+- Persistent View dispatch mechanism now uses the ``message_id`` key if provided.
+- :meth:`Message.start_thread` was renamed to :meth:`Message.create_thread`
+- :meth:`TextChannel.start_thread` was renamed to :meth:`TextChannel.create_thread`
+- All ``get_`` lookup functions now use positional-only parameters for the id parameter.
+- Remove :meth:`TextChannel.active_threads` due to the endpoint being deprecated and slated for removal.
+    - Use :meth:`Guild.active_threads` instead.
+- :attr:`User.avatar` now returns None if the user did not upload an avatar.
+    - Use :attr:`User.display_avatar` to get the avatar and fallback to the default avatar to go back to the old behaviour.
+
+New Features
+~~~~~~~~~~~~~~
+
+- Channel types are now typed
+- Member is now typed
+- Client is now typed
+- Permissions are now typed
+- Core library errors are now typed
+- Add various examples showing how to use views. There are more to come.
+- :attr:`GroupChannel.owner_id` now gets the owner ID
+- ``edit`` methods now don't rely on previous state
+- :meth:`View.from_message` converts a Message.components to a View
+- :attr:`Thread.type` to get the thread channel type
+- :attr:`ButtonStyle.url` alias for :attr:`ButtonStyle.link`
+- Add default style for :class:`ui.Button` constructor
+    - This makes it so creating a URL button is as simple as ``ui.Button(url='...', label='...')``
+- :attr:`Thread.mention` to get the mention string for a thread
+- :meth:`Thread.is_nsfw` to check whether the parent channel of the thread is NSFW
+- Add support for fetching the original interaction response message.
+    - :meth:`Interaction.original_message` will retrieve it and returns an InteractionMessage
+    - :meth:`InteractionMessage.edit` or :meth:`Interaction.edit_original_message` will edit it
+    - :meth:`InteractionMessage.delete` or :meth:`Interaction.delete_original_message` will delete it
+- :attr:`MessageFlags.ephemeral` to get whether a message is ephemeral
+- :meth:`Client.fetch_channel` now fetches threads as well
+- :class:`SelectOption` now has a __str__ that matches the client representation.
+    - This might change in the future to remove the description from it.
+- Add a converter for :class:`discord.Thread`
+- Allow ``clean_content`` converter to work stand-alone
+- Add :meth:`User.banner` to get a user's banner and :meth:`User.accent_colour` to get the set banner colour.
+    - Due to an API limitation this requires using :meth:`Client.fetch_user`.
+- Add ``reason`` keyword argument to more methods
+- Add audit log events for threads
+- Allow public threads to be created without a starter message
+- Add :meth:`Guild.get_channel_or_thread` helper method
+- Add full support for the new sticker API
+- Add :func:`on_socket_event_type` event to get the event type of an event
+- Add :attr:`TextChannel.default_auto_archive_duration`
+- Add :class:`PartialMessageable` type to allow for sending messages to a channel using only its ``channel_id``.
+    - This is constructed with :meth:`Client.get_partial_messageable`.
+- Add :meth:`Guild.active_threads` to get all of a guild's active threads.
+- Add :attr:`Thread.members` to get all cached :class:`ThreadMember` instances of a thread.
+- Add :meth:`Thread.fetch_members` to fetch all :class:`ThreadMember` instances of a thread.
+    - These two require :attr:`Intents.members` to be useful.
+- Add support for guild avatars for members under :attr:`Member.guild_avatar`
+- Add :attr:`User.display_avatar` and :attr:`Member.display_avatar` to get the user's displayed avatar.
+- Add :attr:`Colour.brand_green` and :attr:`Colour.brand_red`
+- |commands| :attr:`CommandOnCooldown.type` to get back the type of the cooldown since it was removed from :class:`Cooldown`
+- Add :attr:`Guild.bots` and :attr:`Guild.humans`
+
+
+Bug Fixes
+~~~~~~~~~~~
+
+- :class:`Channel` converters now work in DMs again
+- Fix :attr:`Interaction.channel` being None in threads
+- Change timeouts in :class:`ui.View` to work as documented
+- :attr:`Message.__repr__` now shows the proper type, e.g. :class:`WebhookMessage` and :class:`InteractionMessage`
+- Change :class:`Cooldown` handling to not reset token window when the number of tokens reaches 0
+- Fix audit log permission construction breaking due to unexpected type errors.
+- Fix :func:`on_thread_join` not dispatching when a thread is unarchived
+- Fix :attr:`Message.guild` being None when a thread is unarchived due to a new message
+- :class:`MessageConverter` now works with threads
+- Retry requests when a 504 is hit
+- Fix :attr:`Thread.slowmode_delay` not updating on edit
+- Fix ``permissions_for`` for roles
+- Update :attr:`Message.system_content` for newer message types
+- Fix :class:`PartialMessage` not working with threads
+- Fix crash with stage instances not having the documented ``discoverable_enabled`` key
+- Fix some built-in checks not working with threads
+- Fix :class:`SyncWebhook` not working in a multi-threaded context
+- Fix :func:`on_thread_member_remove` not dispatching properly
+- Fix :func:`on_typing` not dispatching for threads
+- Update :attr:`Message.is_system` to work with newer message types
+- Fix some enums like :class:`VerificationLevel` not being comparable.
+- Fix ``io.BytesIO`` sources not working with ffmpeg players
+- Fix :meth:`Client.fetch_channel` and :meth:`Guild.fetch_channel` not returning threads
+
 .. _vp1p7p3:
 
 v1.7.3
