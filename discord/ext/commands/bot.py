@@ -120,8 +120,8 @@ class _DefaultRepr:
 _default = _DefaultRepr()
 
 class BotBase(GroupMixin):
-    def __init__(self, command_prefix, help_command=_default, description=None, **options):
-        super().__init__(**options)
+    def __init__(self, command_prefix, help_command=_default, description=None, *, intents: discord.Intents, **options):
+        super().__init__(**options, intents=intents)
         self.command_prefix = command_prefix
         self.extra_events: Dict[str, List[CoroFunc]] = {}
         self.__cogs: Dict[str, Cog] = {}
