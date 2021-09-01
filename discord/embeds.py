@@ -72,14 +72,17 @@ if TYPE_CHECKING:
     T = TypeVar('T')
     MaybeEmpty = Union[T, _EmptyEmbed]
 
+
     class _EmbedFooterProxy(Protocol):
         text: MaybeEmpty[str]
         icon_url: MaybeEmpty[str]
+
 
     class _EmbedFieldProxy(Protocol):
         name: MaybeEmpty[str]
         value: MaybeEmpty[str]
         inline: bool
+
 
     class _EmbedMediaProxy(Protocol):
         url: MaybeEmpty[str]
@@ -87,14 +90,17 @@ if TYPE_CHECKING:
         height: MaybeEmpty[int]
         width: MaybeEmpty[int]
 
+
     class _EmbedVideoProxy(Protocol):
         url: MaybeEmpty[str]
         height: MaybeEmpty[int]
         width: MaybeEmpty[int]
 
+
     class _EmbedProviderProxy(Protocol):
         name: MaybeEmpty[str]
         url: MaybeEmpty[str]
+
 
     class _EmbedAuthorProxy(Protocol):
         name: MaybeEmpty[str]
@@ -175,15 +181,15 @@ class Embed:
     Empty: Final = EmptyEmbed
 
     def __init__(
-        self,
-        *,
-        colour: Union[int, Colour, _EmptyEmbed] = EmptyEmbed,
-        color: Union[int, Colour, _EmptyEmbed] = EmptyEmbed,
-        title: MaybeEmpty[Any] = EmptyEmbed,
-        type: EmbedType = 'rich',
-        url: MaybeEmpty[Any] = EmptyEmbed,
-        description: MaybeEmpty[Any] = EmptyEmbed,
-        timestamp: datetime.datetime = None,
+            self,
+            *,
+            colour: Union[int, Colour, _EmptyEmbed] = EmptyEmbed,
+            color: Union[int, Colour, _EmptyEmbed] = EmptyEmbed,
+            title: MaybeEmpty[Any] = EmptyEmbed,
+            type: EmbedType = 'rich',
+            url: MaybeEmpty[Any] = EmptyEmbed,
+            description: MaybeEmpty[Any] = EmptyEmbed,
+            timestamp: datetime.datetime = None,
     ):
 
         self.colour = colour if colour is not EmptyEmbed else color
@@ -366,7 +372,7 @@ class Embed:
             self._footer['icon_url'] = str(icon_url)
 
         return self
-    
+
     def remove_footer(self: E) -> E:
         """Clears embed's footer information.
 
@@ -381,7 +387,7 @@ class Embed:
             pass
 
         return self
-    
+
     @property
     def image(self) -> _EmbedMediaProxy:
         """Returns an ``EmbedProxy`` denoting the image contents.
@@ -396,6 +402,19 @@ class Embed:
         If the attribute has no value then :attr:`Empty` is returned.
         """
         return EmbedProxy(getattr(self, '_image', {}))  # type: ignore
+
+    @image.setter
+    def image(self: E, *, url: Any):
+        self._image = {
+            'url': str(url),
+        }
+
+    @image.deleter
+    def image(self: E):
+        try:
+            del self._image
+        except AttributeError:
+            pass
 
     def set_image(self: E, *, url: MaybeEmpty[Any]) -> E:
         """Sets the image for the embed content.
@@ -413,14 +432,9 @@ class Embed:
         """
 
         if url is EmptyEmbed:
-            try:
-                del self._image
-            except AttributeError:
-                pass
+            del self.image
         else:
-            self._image = {
-                'url': str(url),
-            }
+            self.image = url
 
         return self
 
@@ -439,7 +453,25 @@ class Embed:
         """
         return EmbedProxy(getattr(self, '_thumbnail', {}))  # type: ignore
 
-    def set_thumbnail(self: E, *, url: MaybeEmpty[Any]) -> E:
+    @thumbnail.setter
+    def thumbnail(self: E, *, url: Any):
+        """Sets the thumbnail for the embed content.
+        """
+
+        self._thumbnail = {
+            'url': str(url),
+        }
+
+        return
+
+    @thumbnail.deleter
+    def thumbnail(self):
+        try:
+            del self.thumbnail
+        except AttributeError:
+            pass
+
+    def set_thumbnail(self: E, *, url: MaybeEmpty[Any]):
         """Sets the thumbnail for the embed content.
 
         This function returns the class instance to allow for fluent-style
@@ -453,16 +485,10 @@ class Embed:
         url: :class:`str`
             The source URL for the thumbnail. Only HTTP(S) is supported.
         """
-
         if url is EmptyEmbed:
-            try:
-                del self._thumbnail
-            except AttributeError:
-                pass
+            del self.thumbnail
         else:
-            self._thumbnail = {
-                'url': str(url),
-            }
+            self.thumbnail = url
 
         return self
 
