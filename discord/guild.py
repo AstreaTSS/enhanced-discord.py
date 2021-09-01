@@ -140,6 +140,10 @@ class Guild(Hashable):
 
             Returns the guild's name.
 
+        .. describe:: int(x)
+
+            Returns the guild's ID.
+
     Attributes
     ----------
     name: :class:`str`
