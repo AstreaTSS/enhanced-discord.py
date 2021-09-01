@@ -324,6 +324,15 @@ class Colour:
         .. versionadded:: 2.0
         """
         return cls(0xFEE75C)
+    
+    @classmethod
+    def dark_blurple(cls: Type[CT]) -> CT:
+        """A factory method that returns a :class:`Colour` with a value of ``0x4E5D94``.
+        This is the original Dark Blurple branding.
+
+        .. versionadded:: 2.0
+        """
+        return cls(0x4E5D94)
 
 
 Color = Colour
