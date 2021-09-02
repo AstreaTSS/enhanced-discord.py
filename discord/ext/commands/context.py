@@ -32,6 +32,7 @@ import discord.abc
 import discord.utils
 
 from discord.message import Message
+from discord import Permissions
 
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec
@@ -313,6 +314,13 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         r"""Optional[:class:`.VoiceProtocol`]: A shortcut to :attr:`.Guild.voice_client`\, if applicable."""
         g = self.guild
         return g.voice_client if g else None
+
+    def author_permissions(self) -> Permissions:
+        """Returns the author permissions in the given channel.
+
+        .. versionadded:: 2.0
+        """
+        return self.channel.permissions_for(self.author)
 
     async def send_help(self, *args: Any) -> Any:
         """send_help(entity=<bot>)
