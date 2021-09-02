@@ -465,7 +465,7 @@ class Embed:
     @thumbnail.deleter
     def thumbnail(self):
         try:
-            del self.thumbnail
+            del self._thumbnail
         except AttributeError:
             pass
 
