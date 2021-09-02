@@ -404,10 +404,13 @@ class Embed:
         return EmbedProxy(getattr(self, '_image', {}))  # type: ignore
 
     @image.setter
-    def image(self: E, *, url: Any):
-        self._image = {
-            'url': str(url),
-        }
+    def image(self: E, url: Any):
+        if url is EmptyEmbed:
+            del self._image
+        else:
+            self._image = {
+                'url': str(url),
+            }
 
     @image.deleter
     def image(self: E):
@@ -431,10 +434,7 @@ class Embed:
             The source URL for the image. Only HTTP(S) is supported.
         """
 
-        if url is EmptyEmbed:
-            del self.image
-        else:
-            self.image = url
+        self.image = url
 
         return self
 
@@ -454,15 +454,13 @@ class Embed:
         return EmbedProxy(getattr(self, '_thumbnail', {}))  # type: ignore
 
     @thumbnail.setter
-    def thumbnail(self: E, *, url: Any):
-        """Sets the thumbnail for the embed content.
-        """
-
-        self._thumbnail = {
-            'url': str(url),
-        }
-
-        return
+    def thumbnail(self: E, url: Any):
+        if url is EmptyEmbed:
+            del self._thumbnail
+        else:
+            self._thumbnail = {
+                'url': str(url),
+            }
 
     @thumbnail.deleter
     def thumbnail(self):
@@ -485,10 +483,8 @@ class Embed:
         url: :class:`str`
             The source URL for the thumbnail. Only HTTP(S) is supported.
         """
-        if url is EmptyEmbed:
-            del self.thumbnail
-        else:
-            self.thumbnail = url
+
+        self.thumbnail = url
 
         return self
 
