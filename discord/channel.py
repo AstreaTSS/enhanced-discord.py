@@ -229,6 +229,16 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         return [m for m in self.guild.members if self.permissions_for(m).read_messages]
 
     @property
+    def bots(self) -> List[Member]:
+        """List[:class:`Member`]: Returns all bots that can see this channel."""
+        return [m for m in self.guild.members if m.bot and self.permissions_for(m).read_messages]
+
+    @property
+    def humans(self) -> List[Member]:
+        """List[:class:`Member`]: Returns all human members that can see this channel."""
+        return [m for m in self.guild.members if not m.bot and self.permissions_for(m).read_messages]
+
+    @property
     def threads(self) -> List[Thread]:
         """List[:class:`Thread`]: Returns all the threads that you can see.
 
