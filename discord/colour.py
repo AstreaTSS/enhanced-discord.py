@@ -251,6 +251,13 @@ class Colour:
     def red(cls: Type[CT]) -> CT:
         """A factory method that returns a :class:`Colour` with a value of ``0xe74c3c``."""
         return cls(0xe74c3c)
+    
+    @classmethod
+    def nitro_booster(cls):
+        """A factory method that returns a :class:`Colour` with a value of ``0xf47fff``.
+
+        .. versionadded:: 2.0"""
+        return cls(0xf47fff)
 
     @classmethod
     def dark_red(cls: Type[CT]) -> CT:
