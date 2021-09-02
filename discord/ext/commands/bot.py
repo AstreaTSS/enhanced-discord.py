@@ -344,14 +344,59 @@ class BotBase(GroupMixin):
         elif self.owner_ids:
             return user.id in self.owner_ids
         else:
+            # Populate the used fields, then retry the check. This is only done at-most once in the bot lifetime.
+            await self.populate_owners()
+            return await self.is_owner(user)
 
-            app = await self.application_info()  # type: ignore
-            if app.team:
-                self.owner_ids = ids = {m.id for m in app.team.members}
-                return user.id in ids
+    async def try_owners(self) -> List[discord.User]:
+        """|coro|
+
+        Returns a list of :class:`~discord.User` representing the owners of the bot.
+        It uses the :attr:`owner_id` and :attr:`owner_ids`, if set.
+
+        .. versionadded:: 2.0
+            The function also checks if the application is team-owned if
+            :attr:`owner_ids` is not set.
+
+        Returns
+        --------
+        List[:class:`~discord.User`]
+            List of owners of the bot.
+        """
+        if self.owner_id:
+            owner = await self.try_user(self.owner_id)
+
+            if owner:
+                return [owner]
             else:
-                self.owner_id = owner_id = app.owner.id
-                return user.id == owner_id
+                return []
+
+        elif self.owner_ids:
+            owners = []
+
+            for owner_id in self.owner_ids:
+                owner = await self.try_user(owner_id)
+                if owner:
+                    owners.append(owner)
+
+            return owners
+        else:
+            # We didn't have owners cached yet, cache them and retry.
+            await self.populate_owners()
+            return await self.try_owners()
+
+    async def populate_owners(self):
+        """|coro|
+
+        Populate the :attr:`owner_id` and :attr:`owner_ids` through the use of :meth:`~.Bot.application_info`.
+
+        .. versionadded:: 2.0
+        """
+        app = await self.application_info()  # type: ignore
+        if app.team:
+            self.owner_ids = {m.id for m in app.team.members}
+        else:
+            self.owner_id = app.owner.id
 
     def before_invoke(self, coro: CFT) -> CFT:
         """A decorator that registers a coroutine as a pre-invoke hook.
