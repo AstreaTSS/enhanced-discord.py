@@ -1,5 +1,5 @@
-discord.py
-==========
+enhanced-discord.py
+===================
 
 .. image:: https://discord.com/api/guilds/514232441498763279/embed.png
    :target: https://discord.gg/PYAfZzpsjG
