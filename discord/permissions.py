@@ -299,7 +299,12 @@ class Permissions(BaseFlags):
         """
         return 1 << 3
 
-    admin = administrator
+    @make_permission_alias('administrator')
+    def admin(self) -> int:
+        """:class:`bool`: An alias for :attr:`administrator`.
+        .. versionadded:: 2.0
+        """
+        return 1 << 3
 
     @flag_value
     def manage_channels(self) -> int:
