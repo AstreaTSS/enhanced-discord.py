@@ -43,6 +43,7 @@ from .context import Context
 from . import errors
 from .help import HelpCommand, DefaultHelpCommand
 from .cog import Cog
+from discord.utils import raise_expected_coro
 
 if TYPE_CHECKING:
     import importlib.machinery
@@ -424,11 +425,9 @@ class BotBase(GroupMixin):
         TypeError
             The coroutine passed is not actually a coroutine.
         """
-        if not asyncio.iscoroutinefunction(coro):
-            raise TypeError('The pre-invoke hook must be a coroutine.')
-
-        self._before_invoke = coro
-        return coro
+        return raise_expected_coro(
+            coro, 'The pre-invoke hook must be a coroutine.'
+        )
 
     def after_invoke(self, coro: CFT) -> CFT:
         r"""A decorator that registers a coroutine as a post-invoke hook.
@@ -457,11 +456,10 @@ class BotBase(GroupMixin):
         TypeError
             The coroutine passed is not actually a coroutine.
         """
-        if not asyncio.iscoroutinefunction(coro):
-            raise TypeError('The post-invoke hook must be a coroutine.')
+        return raise_expected_coro(
+            coro, 'The post-invoke hook must be a coroutine.'
+        )
 
-        self._after_invoke = coro
-        return coro
 
     # listener registration
 
