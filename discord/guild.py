@@ -46,7 +46,7 @@ from . import utils, abc
 from .role import Role
 from .member import Member, VoiceState
 from .emoji import Emoji
-from .errors import InvalidData
+from .errors import InvalidData, NotFound
 from .permissions import PermissionOverwrite
 from .colour import Colour
 from .errors import InvalidArgument, ClientException
@@ -1723,6 +1723,8 @@ class Guild(Hashable):
             You do not have access to the guild.
         HTTPException
             Fetching the member failed.
+        NotFound
+            A member with that ID does not exist.
 
         Returns
         --------
@@ -1731,6 +1733,34 @@ class Guild(Hashable):
         """
         data = await self._state.http.get_member(self.id, member_id)
         return Member(data=data, state=self._state, guild=self)
+
+    async def try_member(self, member_id: int, /) -> Optional[Member]:
+        """|coro|
+
+        Returns a member with the given ID. This uses the cache first, and if not found, it'll request using :meth:`fetch_member`.
+
+        .. note::
+            This method might result in an API call.
+
+        Parameters
+        -----------
+        member_id: :class:`int`
+            The ID to search for.
+
+        Returns
+        --------
+        Optional[:class:`Member`]
+            The member or ``None`` if not found.
+        """
+        member = self.get_member(member_id)
+
+        if member:
+            return member
+        else:
+            try:
+                return await self.fetch_member(member_id)
+            except NotFound:
+                return None
 
     async def fetch_ban(self, user: Snowflake) -> BanEntry:
         """|coro|
