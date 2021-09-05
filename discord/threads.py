@@ -843,4 +843,4 @@ class ThreadMember(Hashable):
             The member or ``None`` if not found.
         """
 
-        return await self.thread.guild.get_member(self.id)
+        return self.thread.guild.get_member(self.id)
