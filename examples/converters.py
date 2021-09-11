@@ -30,6 +30,7 @@ async def userinfo(ctx: commands.Context, user: discord.User):
     avatar = user.display_avatar.url
     await ctx.send(f"User found: {user_id} -- {username}\n{avatar}")
 
+
 @userinfo.error
 async def userinfo_error(ctx: commands.Context, error: commands.CommandError):
     # if the conversion above fails for any reason, it will raise `commands.BadArgument`
