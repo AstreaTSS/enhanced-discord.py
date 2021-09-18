@@ -624,7 +624,7 @@ class Client:
     async def start(self, token: str, *, reconnect: bool = True) -> None:
         """|coro|
 
-        A shorthand coroutine for :meth:`login` + :meth:`connect`.
+        A shorthand coroutine for :meth:`login` + :meth:`setup` + :meth:`connect`.
 
         Raises
         -------
@@ -632,7 +632,20 @@ class Client:
             An unexpected keyword argument was received.
         """
         await self.login(token)
+        await self.setup()
         await self.connect(reconnect=reconnect)
+
+    async def setup(self) -> Any:
+        """|coro|
+
+        A coroutine to be called to setup the bot, by default this is blank.
+
+        To perform asynchronous setup after the bot is logged in but before
+        it has connected to the Websocket, overwrite this coroutine.
+
+        .. versionadded:: 2.0
+        """
+        pass
 
     def run(self, *args: Any, **kwargs: Any) -> None:
         """A blocking call that abstracts away the event loop
@@ -722,7 +735,7 @@ class Client:
         """:class:`.Status`:
         The status being used upon logging on to Discord.
 
-        .. versionadded: 2.0
+        .. versionadded:: 2.0
         """
         if self._connection._status in set(state.value for state in Status):
             return Status(self._connection._status)

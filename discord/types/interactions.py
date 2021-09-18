@@ -227,8 +227,8 @@ class _EditApplicationCommandOptional(TypedDict, total=False):
     description: str
     options: Optional[List[ApplicationCommandOption]]
     type: ApplicationCommandType
+    default_permission: bool
 
 
 class EditApplicationCommand(_EditApplicationCommandOptional):
     name: str
-    default_permission: bool

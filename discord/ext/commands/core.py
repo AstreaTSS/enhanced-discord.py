@@ -23,12 +23,14 @@ DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
 
+
 from typing import (
     Any,
     Callable,
     Dict,
     Generator,
     Generic,
+    Iterable,
     Literal,
     List,
     Optional,
@@ -38,27 +40,32 @@ from typing import (
     TypeVar,
     Type,
     TYPE_CHECKING,
+    cast,
     overload,
 )
 import asyncio
 import functools
 import inspect
 import datetime
+from collections import defaultdict
+from operator import itemgetter
 
 import discord
 
 from .errors import *
 from .cooldowns import Cooldown, BucketType, CooldownMapping, MaxConcurrency, DynamicCooldownMapping
-from .converter import run_converters, get_converter, Greedy
+from .converter import CONVERTER_MAPPING, Converter, run_converters, get_converter, Greedy, Option
 from ._types import _BaseCommand
 from .cog import Cog
 from .context import Context
+from .flags import FlagConverter
 
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec, TypeGuard
 
     from discord.message import Message
+    from discord.types.interactions import EditApplicationCommand, ApplicationCommandInteractionDataOption
 
     from ._types import (
         Coro,
@@ -107,6 +114,21 @@ GroupT = TypeVar("GroupT", bound="Group")
 HookT = TypeVar("HookT", bound="Hook")
 ErrorT = TypeVar("ErrorT", bound="Error")
 
+REVERSED_CONVERTER_MAPPING = {v: k for k, v in CONVERTER_MAPPING.items()}
+application_option_type_lookup = {
+    str: 3,
+    bool: 5,
+    int: 4,
+    (
+        discord.Member,
+        discord.User,
+    ): 6,  # Preferably discord.abc.User, but 'Protocols with non-method members don't support issubclass()'
+    (discord.abc.GuildChannel, discord.DMChannel): 7,
+    discord.Role: 8,
+    discord.Object: 9,
+    float: 10,
+}
+
 if TYPE_CHECKING:
     P = ParamSpec("P")
 else:
@@ -124,13 +146,21 @@ def unwrap_function(function: Callable[..., Any]) -> Callable[..., Any]:
             return function
 
 
-def get_signature_parameters(function: Callable[..., Any], globalns: Dict[str, Any]) -> Dict[str, inspect.Parameter]:
+def get_signature_parameters(
+    function: Callable[..., Any], globalns: Dict[str, Any]
+) -> Tuple[Dict[str, inspect.Parameter], Dict[str, str]]:
     signature = inspect.signature(function)
     params = {}
     cache: Dict[str, Any] = {}
+    descriptions = defaultdict(lambda: "no description")
     eval_annotation = discord.utils.evaluate_annotation
     for name, parameter in signature.parameters.items():
         annotation = parameter.annotation
+        if isinstance(parameter.default, Option):  # type: ignore
+            option = parameter.default
+            descriptions[name] = option.description
+            parameter = parameter.replace(default=option.default)
+
         if annotation is parameter.empty:
             params[name] = parameter
             continue
@@ -144,7 +174,7 @@ def get_signature_parameters(function: Callable[..., Any], globalns: Dict[str, A
 
         params[name] = parameter.replace(annotation=annotation)
 
-    return params
+    return params, descriptions
 
 
 def wrap_callback(coro):
@@ -276,9 +306,26 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
     extras: :class:`dict`
         A dict of user provided extras to attach to the Command.
 
+        .. versionadded:: 2.0
+
         .. note::
             This object may be copied by the library.
+    message_command: Optional[:class:`bool`]
+        Whether to process this command based on messages.
 
+        This overwrites the global ``message_commands`` parameter of :class:`.Bot`.
+
+        .. versionadded:: 2.0
+    slash_command: Optional[:class:`bool`]
+        Whether to upload and process this command as a slash command.
+
+        This overwrites the global ``slash_commands`` parameter of :class:`.Bot`.
+
+        .. versionadded:: 2.0
+    slash_command_guilds: Optional[:class:`List[int]`]
+        If this is set, only upload this slash command to these guild IDs.
+
+        This overwrites the global ``slash_command_guilds`` parameter of :class:`.Bot`.
 
         .. versionadded:: 2.0
     """
@@ -318,6 +365,10 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         self.callback = func
         self.enabled: bool = kwargs.get("enabled", True)
+
+        self.slash_command: Optional[bool] = kwargs.get("slash_command", None)
+        self.message_command: Optional[bool] = kwargs.get("message_command", None)
+        self.slash_command_guilds: Optional[Iterable[int]] = kwargs.get("slash_command_guilds", None)
 
         help_doc = kwargs.get("help")
         if help_doc is not None:
@@ -377,6 +428,10 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         # bandaid for the fact that sometimes parent can be the bot instance
         parent = kwargs.get("parent")
         self.parent: Optional[GroupMixin] = parent if isinstance(parent, _BaseCommand) else None  # type: ignore
+        if self.slash_command_guilds is not None and self.parent is not None:
+            raise ValueError(
+                "Cannot set specific guilds for a subcommand. They are inherited from the top level group."
+            )
 
         self._before_invoke: Optional[Hook] = None
         try:
@@ -417,7 +472,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         except AttributeError:
             globalns = {}
 
-        self.params = get_signature_parameters(function, globalns)
+        self.params, self.option_descriptions = get_signature_parameters(function, globalns)
 
     def add_check(self, func: Check) -> None:
         """Adds a check to the command.
@@ -541,6 +596,10 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             ctx.bot.dispatch("command_error", ctx, error)
 
     async def transform(self, ctx: Context, param: inspect.Parameter) -> Any:
+        if param in ctx._ignored_params:
+            # in a slash command, we need a way to mark a param as default so ctx._ignored_params is used
+            return param.default if param.default is not param.empty else None
+
         required = param.default is param.empty
         converter = get_converter(param)
         consume_rest_is_special = param.kind == param.KEYWORD_ONLY and not self.rest_is_raw
@@ -1109,9 +1168,18 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         :class:`bool`
             A boolean indicating if the command can be invoked.
         """
-
         if not self.enabled:
             raise DisabledCommand(f"{self.name} command is disabled")
+
+        if ctx.interaction is None and (
+            self.message_command is False or (self.message_command is None and not ctx.bot.message_commands)
+        ):
+            raise DisabledCommand(f"{self.name} command cannot be run as a message command")
+
+        if ctx.interaction is not None and (
+            self.slash_command is False or (self.slash_command is None and not ctx.bot.slash_commands)
+        ):
+            raise DisabledCommand(f"{self.name} command cannot be run as a slash command")
 
         original = ctx.command
         ctx.command = self
@@ -1136,6 +1204,90 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             return await discord.utils.async_all(predicate(ctx) for predicate in predicates)  # type: ignore
         finally:
             ctx.command = original
+
+    def _param_to_options(
+        self, name: str, annotation: Any, required: bool, varadic: bool
+    ) -> List[Optional[ApplicationCommandInteractionDataOption]]:
+
+        origin = getattr(annotation, "__origin__", None)
+        if inspect.isclass(annotation) and issubclass(annotation, FlagConverter):
+            return [
+                param
+                for name, flag in annotation.get_flags().items()
+                for param in self._param_to_options(
+                    name, flag.annotation, required=flag.required, varadic=flag.annotation is tuple
+                )
+            ]
+
+        if varadic:
+            annotation = str
+            origin = None
+
+        if not required and origin is not None and len(annotation.__args__) == 2:
+            # Unpack Optional[T] (Union[T, None]) into just T
+            annotation, origin = annotation.__args__[0], None
+
+        option: Dict[str, Any] = {
+            "name": name,
+            "required": required,
+            "description": self.option_descriptions[name],
+        }
+
+        if origin is None:
+            if not inspect.isclass(annotation):
+                annotation = type(annotation)
+
+            if issubclass(annotation, Converter):
+                # If this is a converter, we want to check if it is a native
+                # one, in which we can get the original type, eg, (MemberConverter -> Member)
+                annotation = REVERSED_CONVERTER_MAPPING.get(annotation, annotation)
+
+            option["type"] = 3
+            for python_type, discord_type in application_option_type_lookup.items():
+                if issubclass(annotation, python_type):
+                    option["type"] = discord_type
+                    break
+
+        elif origin is Literal:
+            literal_values = annotation.__args__
+            python_type = type(literal_values[0])
+            if (
+                all(type(value) == python_type for value in literal_values)
+                and python_type in application_option_type_lookup.keys()
+            ):
+
+                option["type"] = application_option_type_lookup[python_type]
+                option["choices"] = [
+                    {"name": literal_value, "value": literal_value} for literal_value in annotation.__args__
+                ]
+
+        option.setdefault("type", 3)  # STRING
+        return [option]  # type: ignore
+
+    def to_application_command(self, nested: int = 0) -> Optional[EditApplicationCommand]:
+        if self.slash_command is False:
+            return
+        elif nested == 3:
+            raise ApplicationCommandRegistrationError(self, f"{self.qualified_name} is too deeply nested!")
+
+        payload = {"name": self.name, "description": self.short_doc or "no description", "options": []}
+        if nested != 0:
+            payload["type"] = 1
+
+        for name, param in self.clean_params.items():
+            options = self._param_to_options(
+                name,
+                param.annotation if param.annotation is not param.empty else str,
+                varadic=param.kind == param.KEYWORD_ONLY or isinstance(param.annotation, Greedy),
+                required=(param.default is param.empty and not self._is_typing_optional(param.annotation))
+                or param.kind == param.VAR_POSITIONAL,
+            )
+            if options is not None:
+                payload["options"].extend(option for option in options if option is not None)
+
+        # Now we have all options, make sure required is before optional.
+        payload["options"] = sorted(payload["options"], key=itemgetter("required"), reverse=True)
+        return payload  # type: ignore
 
 
 class GroupMixin(Generic[CogT]):
@@ -1509,6 +1661,19 @@ class Group(GroupMixin[CogT], Command[CogT, P, T]):
             view.index = previous
             view.previous = previous
             await super().reinvoke(ctx, call_hooks=call_hooks)
+
+    def to_application_command(self, nested: int = 0) -> Optional[EditApplicationCommand]:
+        if self.slash_command is False:
+            return
+        elif nested == 2:
+            raise ApplicationCommandRegistrationError(self, f"{self.qualified_name} is too deeply nested!")
+
+        return {  # type: ignore
+            "name": self.name,
+            "type": int(not (nested - 1)) + 1,
+            "description": self.short_doc or "no description",
+            "options": [cmd.to_application_command(nested=nested + 1) for cmd in self.commands],
+        }
 
 
 # Decorators
