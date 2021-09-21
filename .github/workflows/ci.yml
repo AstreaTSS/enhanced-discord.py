@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  lint:
+  pyright:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -22,5 +22,17 @@ jobs:
       - name: Run type checking
         run: |
           npm install -g pyright
-          pip install -r requirements.txt
+          pip install .
           pyright --lib --verifytypes discord --ignoreexternal
+
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run linter
+        uses: psf/black@stable
+        with:
+          options: "--line-length 120 --check"
+          src: "./discord"
