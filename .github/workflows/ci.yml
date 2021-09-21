@@ -1,0 +1,26 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      
+      - name: Setup node.js (for pyright)
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14"
+          
+      - name: Run type checking
+        run: |
+          npm install -g pyright
+          pip install -r requirements.txt
+          pyright --lib --verifytypes discord --ignoreexternal
