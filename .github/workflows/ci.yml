@@ -28,19 +28,11 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v1
+      - name: Run linter
+        uses: psf/black@stable
         with:
-          python-version: 3.8
-
-      - name: install black
-        run: pip install black
-
-      - name: run linter
-        uses: wearerequired/lint-action@v1
-        with:
-          black: true
-          black_args: ". --line-length 120 --check"
+          options: "--line-length 120 --check"
+          src: "./discord"
