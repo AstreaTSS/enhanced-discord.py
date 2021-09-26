@@ -13,10 +13,7 @@ from .abc import GuildChannel
 from .channel import DMChannel
 from .role import Role
 
-__all__ = (
-    "Command",
-    "Option"
-)
+__all__ = ("Command", "Option")
 
 application_option_type_lookup = {
     str: 3,
@@ -35,43 +32,41 @@ def _option_to_dict(option: _OptionData) -> dict:
     origin = getattr(option.type, "__origin__", None)
     arg = option.type
 
-    payload = {
-        "name": option.name,
-        "description": option.description or "none provided",
-        "required": True
-    }
+    payload = {"name": option.name, "description": option.description or "none provided", "required": True}
 
     if origin is Union:
-        if arg.__args__[1] is None: # type: ignore
-            payload['required'] = False
-            arg = arg.__args__[0] # type: ignore
+        if arg.__args__[1] is None:  # type: ignore
+            payload["required"] = False
+            arg = arg.__args__[0]  # type: ignore
 
         if arg == Union[Member, Role]:
             payload["type"] = 9
 
     elif origin is Literal:
-        values = arg.__args__ # type: ignore
+        values = arg.__args__  # type: ignore
         python_type = type(values[0])
-        if (
-                all(type(value) == python_type for value in values)
-                and python_type in application_option_type_lookup.keys()
-        ):
+        if all(type(value) == python_type for value in values) and python_type in application_option_type_lookup.keys():
             payload["type"] = application_option_type_lookup[python_type]
-            payload["choices"] = [
-                {"name": literal_value, "value": literal_value} for literal_value in values
-            ]
-
+            payload["choices"] = [{"name": literal_value, "value": literal_value} for literal_value in values]
 
     return payload
 
 
 class CommandMeta(type):
-    def __new__(mcs, classname: str, bases: tuple, attrs: Dict[str, Any], *,
-                type: ApplicationCommandType = ApplicationCommandType.slash_command, name: str = MISSING,
-                description: str = MISSING, parent: Command = MISSING):
+    def __new__(
+        mcs,
+        classname: str,
+        bases: tuple,
+        attrs: Dict[str, Any],
+        *,
+        type: ApplicationCommandType = ApplicationCommandType.slash_command,
+        name: str = MISSING,
+        description: str = MISSING,
+        parent: Command = MISSING
+    ):
         attrs["_arguments"] = arguments = []
         attrs["_type"] = type
-        attrs['_children'] = []
+        attrs["_children"] = []
 
         if name is not MISSING:
             attrs["_name"] = name
@@ -129,7 +124,7 @@ class Command(metaclass=CommandMeta):
             return {
                 "name": cls._name,
                 "description": cls._description or "no description",
-                "options": [x.to_dict() for x in cls._children]
+                "options": [x.to_dict() for x in cls._children],
             }
 
         options = []
@@ -137,7 +132,7 @@ class Command(metaclass=CommandMeta):
             "name": cls._name,
             "description": cls._description or "no description",
             "type": cls._type.value,
-            "options": options
+            "options": options,
         }
         for option in cls._arguments:
             options.append(_option_to_dict(option))
@@ -166,11 +161,11 @@ class _OptionData:
     __slots__ = ("name", "type", "description", "default")
 
     def __init__(
-            self,
-            name: str,
-            type_: Type[Any],
-            description: Optional[str] = MISSING,
-            default: T = MISSING,
+        self,
+        name: str,
+        type_: Type[Any],
+        description: Optional[str] = MISSING,
+        default: T = MISSING,
     ):
         self.name = name
         self.type = type_

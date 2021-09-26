@@ -531,6 +531,7 @@ class InteractionType(Enum):
     application_command = 2
     component = 3
 
+
 class ApplicationCommandType(Enum):
     slash_command = 1
     user_command = 2
