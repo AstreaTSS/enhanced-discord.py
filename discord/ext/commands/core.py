@@ -54,7 +54,16 @@ import discord
 
 from .errors import *
 from .cooldowns import Cooldown, BucketType, CooldownMapping, MaxConcurrency, DynamicCooldownMapping
-from .converter import CONVERTER_MAPPING, Converter, run_converters, get_converter, Greedy, Option
+from .converter import (
+    CONVERTER_MAPPING,
+    Converter,
+    MemberConverter,
+    RoleConverter,
+    run_converters,
+    get_converter,
+    Greedy,
+    Option,
+)
 from ._types import _BaseCommand
 from .cog import Cog
 from .context import Context
@@ -125,7 +134,6 @@ application_option_type_lookup = {
     ): 6,  # Preferably discord.abc.User, but 'Protocols with non-method members don't support issubclass()'
     (discord.abc.GuildChannel, discord.DMChannel): 7,
     discord.Role: 8,
-    discord.Object: 9,
     float: 10,
 }
 
@@ -399,9 +407,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             command_attrs = {}
 
         try:
-            checks = command_attrs.pop("checks")
+            checks = func.__commands_checks__
             checks.reverse()
-        except KeyError:
+        except AttributeError:
             checks = kwargs.get("checks", [])
 
         try:
@@ -1215,7 +1223,6 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
     def _param_to_options(
         self, name: str, annotation: Any, required: bool, varadic: bool
     ) -> List[Optional[ApplicationCommandInteractionDataOption]]:
-
         origin = getattr(annotation, "__origin__", None)
         if inspect.isclass(annotation) and issubclass(annotation, FlagConverter):
             return [
@@ -1235,6 +1242,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             annotation, origin = annotation.__args__[0], None
 
         option: Dict[str, Any] = {
+            "type": 3,
             "name": name,
             "required": required,
             "description": self.option_descriptions[name],
@@ -1249,11 +1257,14 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 # one, in which we can get the original type, eg, (MemberConverter -> Member)
                 annotation = REVERSED_CONVERTER_MAPPING.get(annotation, annotation)
 
-            option["type"] = 3
             for python_type, discord_type in application_option_type_lookup.items():
                 if issubclass(annotation, python_type):
                     option["type"] = discord_type
                     break
+
+        elif origin is Union:
+            if annotation in {Union[discord.Member, discord.Role], Union[MemberConverter, RoleConverter]}:
+                option["type"] = 9
 
         elif origin is Literal:
             literal_values = annotation.__args__
@@ -1268,7 +1279,6 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                     {"name": literal_value, "value": literal_value} for literal_value in annotation.__args__
                 ]
 
-        option.setdefault("type", 3)  # STRING
         return [option]  # type: ignore
 
     def to_application_command(self, nested: int = 0) -> Optional[EditApplicationCommand]:
@@ -1679,7 +1689,7 @@ class Group(GroupMixin[CogT], Command[CogT, P, T]):
             "name": self.name,
             "type": int(not (nested - 1)) + 1,
             "description": self.short_doc or "no description",
-            "options": [cmd.to_application_command(nested=nested + 1) for cmd in self.commands],
+            "options": [cmd.to_application_command(nested=nested + 1) for cmd in sorted(self.commands, key=lambda x: x.name)],
         }
 
 
