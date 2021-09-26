@@ -54,6 +54,7 @@ __all__ = (
     "StagePrivacyLevel",
     "InteractionType",
     "InteractionResponseType",
+    "ApplicationCommandType",
     "NSFWLevel",
 )
 
@@ -529,6 +530,11 @@ class InteractionType(Enum):
     ping = 1
     application_command = 2
     component = 3
+
+class ApplicationCommandType(Enum):
+    slash_command = 1
+    user_command = 2
+    message_command = 3
 
 
 class InteractionResponseType(Enum):
