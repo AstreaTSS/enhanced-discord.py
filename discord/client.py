@@ -40,6 +40,7 @@ from typing import (
     Sequence,
     TYPE_CHECKING,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
@@ -56,7 +57,7 @@ from .channel import _threaded_channel_factory, PartialMessageable
 from .enums import ChannelType
 from .mentions import AllowedMentions
 from .errors import *
-from .enums import Status, VoiceRegion
+from .enums import Status, VoiceRegion, InteractionType
 from .flags import ApplicationFlags, Intents
 from .gateway import *
 from .activity import ActivityTypes, BaseActivity, create_activity
@@ -74,6 +75,7 @@ from .ui.view import View
 from .stage_instance import StageInstance
 from .threads import Thread
 from .sticker import GuildSticker, StandardSticker, StickerPack, _sticker_factory
+from .slash import Command, CommandState
 
 if TYPE_CHECKING:
     from .abc import SnowflakeTime, PrivateChannel, GuildChannel, Snowflake
@@ -81,11 +83,12 @@ if TYPE_CHECKING:
     from .message import Message
     from .member import Member
     from .voice_client import VoiceProtocol
+    from .interactions import Interaction
 
 __all__ = ("Client",)
 
 Coro = TypeVar("Coro", bound=Callable[..., Coroutine[Any, Any, Any]])
-
+ApplicationCommand = TypeVar("ApplicationCommand", bound=Type[Command])
 
 _log = logging.getLogger(__name__)
 
@@ -251,6 +254,8 @@ class Client:
         self._ready: asyncio.Event = asyncio.Event()
         self._connection._get_websocket = self._get_websocket
         self._connection._get_client = lambda: self
+
+        self._application_command_store: CommandState = CommandState(self._connection, self.http)
 
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
@@ -440,6 +445,16 @@ class Client:
         """
         print(f"Ignoring exception in {event_method}", file=sys.stderr)
         traceback.print_exc()
+
+    async def on_interaction(self, interaction: Interaction) -> None:
+        """|coro|
+
+        An event that handles the dispatching of application commands.
+        See :func:`~discord.on_interaction` for more information.
+        """
+        print(interaction.type)
+        if interaction.type is InteractionType.application_command:
+            await self._application_command_store.dispatch(self, interaction)
 
     # hooks
 
@@ -1714,3 +1729,17 @@ class Client:
         .. versionadded:: 2.0
         """
         return self._connection.persistent_views
+
+    async def upload_global_application_commands(self) -> None:
+        await self._application_command_store.upload_global_commands()
+
+    async def upload_guild_application_commands(self, guild: Guild = None) -> None:
+        await self._application_command_store.upload_guild_commands(guild)
+
+    async def upload_guild_application_command_permissions(self, guild: Guild) -> None:
+        await self._application_command_store.upload_guild_command_permissions(guild.id)
+
+    def application_command(self, cls: ApplicationCommand) -> ApplicationCommand:
+        self._application_command_store.add_command(cls)
+        return cls
+
