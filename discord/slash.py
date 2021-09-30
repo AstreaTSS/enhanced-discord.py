@@ -52,7 +52,10 @@ def _option_to_dict(option: _OptionData) -> dict:
     elif origin is Literal:
         values = arg.__args__  # type: ignore
         python_type_ = type(values[0])
-        if all(type(value) == python_type_ for value in values) and python_type_ in application_option_type__lookup.keys():
+        if (
+            all(type(value) == python_type_ for value in values)
+            and python_type_ in application_option_type__lookup.keys()
+        ):
             payload["type"] = application_option_type__lookup[python_type_]
             payload["choices"] = [{"name": literal_value, "value": literal_value} for literal_value in values]
 
@@ -60,6 +63,7 @@ def _option_to_dict(option: _OptionData) -> dict:
         payload["type"] = application_option_type__lookup.get(arg, 3)
 
     return payload
+
 
 T = TypeVar("T")
 
@@ -102,7 +106,7 @@ class CommandMeta(type):
         name: str = MISSING,
         description: str = MISSING,
         parent: Command = MISSING,
-        guilds: List[Snowflake] = MISSING
+        guilds: List[Snowflake] = MISSING,
     ):
         attrs["_arguments_"] = arguments = []
         attrs["_type_"] = type
@@ -124,7 +128,7 @@ class CommandMeta(type):
         attrs["_parent_"] = parent
 
         if guilds is not MISSING:
-            attrs['_guilds_'] = guilds
+            attrs["_guilds_"] = guilds
 
         ann = attrs.get("__annotations__", {})
 
@@ -157,7 +161,9 @@ class Command(metaclass=CommandMeta):
     _children_: List[Type[Command]]
     _id_: Optional[int] = None
     _guilds_: Optional[List[Snowflake]]
-    _permissions_: Optional[Dict[int, Dict[Snowflake, Tuple[Literal[1, 2], bool]]]] # guild id: { role/member id: (type, enabled) }
+    _permissions_: Optional[
+        Dict[int, Dict[Snowflake, Tuple[Literal[1, 2], bool]]]
+    ]  # guild id: { role/member id: (type, enabled) }
 
     interaction: Interaction
     client: Client
@@ -166,7 +172,7 @@ class Command(metaclass=CommandMeta):
     def set_permissions(cls, guild_id: Snowflake, permissions: Dict[Union[Role, Member], bool]) -> None:
         data: Dict[Snowflake, Tuple[Literal[1, 2], bool]] = {}
         for k, v in permissions.items():
-            data[k.id] = (1 if isinstance(k, Role) else 2, v) # type: ignore
+            data[k.id] = (1 if isinstance(k, Role) else 2, v)  # type: ignore
 
         cls._permissions_[int(guild_id)].update(data)
 
@@ -180,19 +186,12 @@ class Command(metaclass=CommandMeta):
 
     @classmethod
     def to_permissions_dict(cls, guild_id: Snowflake) -> dict:
-        payload = {
-            "id": cls.id(),
-            "permissions": []
-        }
+        payload = {"id": cls.id(), "permissions": []}
         if int(guild_id) not in cls._permissions_:
             return payload
 
         for k, (t, p) in cls._permissions_[guild_id].items():
-            payload['permissions'].append({
-                "id": k,
-                "type": t,
-                "permission": p
-            })
+            payload["permissions"].append({"id": k, "type": t, "permission": p})
 
         return payload
 
@@ -209,7 +208,7 @@ class Command(metaclass=CommandMeta):
         payload = {
             "name": cls._name_,
             "description": cls._description_ or "no description",
-            "type": cls._type_.value, # type: ignore
+            "type": cls._type_.value,  # type: ignore
             "options": options,
         }
         for option in cls._arguments_:
@@ -230,8 +229,8 @@ class CommandState:
         self.http = http
         self._application_id: Optional[str] = None
 
-        self.command_store: Dict[int, Type[Command]] = {} # not using Snowflake to keep one type
-        self.pre_registration: Dict[Optional[int], List[Type[Command]]] = {} # the None key will hold global commands
+        self.command_store: Dict[int, Type[Command]] = {}  # not using Snowflake to keep one type
+        self.pre_registration: Dict[Optional[int], List[Type[Command]]] = {}  # the None key will hold global commands
 
     async def upload_global_commands(self) -> None:
         """
@@ -239,15 +238,17 @@ class CommandState:
         """
         if not self._application_id:
             appinfo = await self.http.application_info()
-            self._application_id = appinfo['id']
+            self._application_id = appinfo["id"]
 
         global_commands = self.pre_registration.get(None, [])
         if global_commands:
-            store = {(x._name_, x.type().value): x for x in global_commands} # type: ignore
-            payload: List[ApplicationCommand] = await self.http.bulk_upsert_global_commands(self._application_id, [x.to_dict() for x in global_commands])
-            for x in payload: # type: ApplicationCommand
-                self.command_store[int(x['id'])] = t = store[(x['name'], x['type'])]
-                t._id_ = int(x['id'])
+            store = {(x._name_, x.type().value): x for x in global_commands}  # type: ignore
+            payload: List[ApplicationCommand] = await self.http.bulk_upsert_global_commands(
+                self._application_id, [x.to_dict() for x in global_commands]
+            )
+            for x in payload:  # type: ApplicationCommand
+                self.command_store[int(x["id"])] = t = store[(x["name"], x["type"])]
+                t._id_ = int(x["id"])
 
     async def upload_guild_commands(self, guild: Optional[Snowflake] = None) -> None:
         """
@@ -256,9 +257,9 @@ class CommandState:
         """
         if not self._application_id:
             appinfo = await self.http.application_info()
-            self._application_id = appinfo['id']
+            self._application_id = appinfo["id"]
 
-        targets: Iterable[Tuple[Optional[Snowflake], List[Type[Command]]]] = None # type: ignore
+        targets: Iterable[Tuple[Optional[Snowflake], List[Type[Command]]]] = None  # type: ignore
 
         if guild:
             if int(guild) not in self.pre_registration:
@@ -267,27 +268,32 @@ class CommandState:
             targets = ((guild, self.pre_registration[int(guild)]),)
 
         else:
-            targets = self.pre_registration.items() # type: ignore
-
+            targets = self.pre_registration.items()  # type: ignore
 
         for (guild, commands) in targets:
             if guild is None:
-                continue # global commands
+                continue  # global commands
 
-            store = {(x._name_, x.type().value): x for x in commands} # type: ignore
+            store = {(x._name_, x.type().value): x for x in commands}  # type: ignore
             t = [x.to_dict() for x in commands]
             print(t)
-            payload: List[ApplicationCommand] = await self.http.bulk_upsert_guild_commands(self._application_id, guild, t)
+            payload: List[ApplicationCommand] = await self.http.bulk_upsert_guild_commands(
+                self._application_id, guild, t
+            )
             for x in payload:
-                self.command_store[int(x['id'])] = t = store[(x['name'], x['type'])]
-                t._id_ = int(x['id'])
+                self.command_store[int(x["id"])] = t = store[(x["name"], x["type"])]
+                t._id_ = int(x["id"])
 
     async def upload_guild_command_permissions(self, guild_id: Snowflake) -> None:
         commands: List[Type[Command]] = self.pre_registration.get(int(guild_id))
         if not commands:
-            raise RuntimeError("No application commands exist for this guild") # TODO replace this exception with something better
+            raise RuntimeError(
+                "No application commands exist for this guild"
+            )  # TODO replace this exception with something better
 
-        await self.http.bulk_edit_guild_application_command_permissions(self._application_id, guild_id, [x.to_permissions_dict(guild_id) for x in commands])
+        await self.http.bulk_edit_guild_application_command_permissions(
+            self._application_id, guild_id, [x.to_permissions_dict(guild_id) for x in commands]
+        )
 
     def add_command(self, command: Type[Command]) -> None:
         if command._guilds_ is None:
@@ -303,7 +309,6 @@ class CommandState:
                     self.pre_registration[x] = []
 
                 self.pre_registration[int(x)].append(command)
-
 
     async def dispatch(self, client: Client, interaction: Interaction):
         print(interaction, self.command_store)
