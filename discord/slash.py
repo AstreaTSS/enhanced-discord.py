@@ -19,7 +19,11 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .http import HTTPClient
     from .types.snowflake import Snowflake
-    from .types.interactions import ApplicationCommand, ApplicationCommandInteractionData, ApplicationCommandInteractionDataOption
+    from .types.interactions import (
+        ApplicationCommand,
+        ApplicationCommandInteractionData,
+        ApplicationCommandInteractionDataOption,
+    )
 
 __all__ = ("Command", "Option")
 
@@ -64,32 +68,38 @@ def _option_to_dict(option: _OptionData) -> dict:
 
     return payload
 
-def _parse_user(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> Union[User, Member]:
-    target = argument['value']
-    if "members" in interaction.data['resolved']: # we're in a guild, parse a member not a user
-        payload = interaction.data['resolved']['members'][target]
-        payload['user'] = interaction.data['resolved']['users'][target]
-        return Member(data=payload, state=state, guild=interaction.guild) # type: ignore
 
-    return User(state=state, data=interaction.data['resolved']['users'][target])
+def _parse_user(
+    interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption
+) -> Union[User, Member]:
+    target = argument["value"]
+    if "members" in interaction.data["resolved"]:  # we're in a guild, parse a member not a user
+        payload = interaction.data["resolved"]["members"][target]
+        payload["user"] = interaction.data["resolved"]["users"][target]
+        return Member(data=payload, state=state, guild=interaction.guild)  # type: ignore
 
-def _parse_channel(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> PartialSlashChannel:
-    target = argument['value']
-    resolved = interaction.data['resolved']['channels'][target]
+    return User(state=state, data=interaction.data["resolved"]["users"][target])
 
-    return PartialSlashChannel(state=state, data=resolved, guild=interaction.guild) # type: ignore
 
-def _parse_role(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> Role:
-    target = argument['value']
-    resolved = interaction.data['resolved']['roles'][target]
+def _parse_channel(
+    interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption
+) -> PartialSlashChannel:
+    target = argument["value"]
+    resolved = interaction.data["resolved"]["channels"][target]
 
-    return Role(guild=interaction.guild, state=state, data=resolved) # type: ignore
+    return PartialSlashChannel(state=state, data=resolved, guild=interaction.guild)  # type: ignore
 
-_parse_index = {
-    6: _parse_user,
-    7: _parse_channel,
-    8: _parse_role
-}
+
+def _parse_role(
+    interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption
+) -> Role:
+    target = argument["value"]
+    resolved = interaction.data["resolved"]["roles"][target]
+
+    return Role(guild=interaction.guild, state=state, data=resolved)  # type: ignore
+
+
+_parse_index = {6: _parse_user, 7: _parse_channel, 8: _parse_role}
 
 T = TypeVar("T")
 
@@ -247,14 +257,13 @@ class Command(metaclass=CommandMeta):
 
         parsed = {}
 
-        for option in intr['options']:
-            if option['type'] in {3, 4, 5, 10}:
-                parsed[option['name']] = option['value']
+        for option in intr["options"]:
+            if option["type"] in {3, 4, 5, 10}:
+                parsed[option["name"]] = option["value"]
             else:
-                parsed[option['name']] = _parse_index[option['type']](self.interaction, state, option)
+                parsed[option["name"]] = _parse_index[option["type"]](self.interaction, state, option)
 
         self.__dict__.update(parsed)
-
 
     async def callback(self) -> None:
         ...
@@ -351,7 +360,7 @@ class CommandState:
                 self.pre_registration[int(x)].append(command)
 
     async def dispatch(self, client: Client, interaction: Interaction) -> None:
-        cls = self.command_store.get(int(interaction.data['id']))
+        cls = self.command_store.get(int(interaction.data["id"]))
         if cls is None:
             return
 

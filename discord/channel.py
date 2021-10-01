@@ -65,7 +65,7 @@ __all__ = (
     "StoreChannel",
     "GroupChannel",
     "PartialMessageable",
-    "PartialSlashChannel"
+    "PartialSlashChannel",
 )
 
 if TYPE_CHECKING:
@@ -86,7 +86,7 @@ if TYPE_CHECKING:
         CategoryChannel as CategoryChannelPayload,
         StoreChannel as StoreChannelPayload,
         GroupDMChannel as GroupChannelPayload,
-        PartialSlashChannel as PartialSlashChannelPayload
+        PartialSlashChannel as PartialSlashChannelPayload,
     )
     from .types.snowflake import SnowflakeList
 
@@ -134,24 +134,19 @@ class PartialSlashChannel(discord.abc.Messageable, Hashable):
         The category channel ID this channel belongs to, if applicable.
 
     """
-    __slots__ = (
-        "id",
-        "name",
-        "guild",
-        "category_id",
-        "_permissions",
-        "_type",
-        "_state",
-        "_cs_permissions"
-    )
-    def __init__(self, *, state: ConnectionState, data: PartialSlashChannelPayload, guild: Optional[Guild] = None) -> None:
-        self.id: int = int(data['id'])
-        self.name: str = data['name']
+
+    __slots__ = ("id", "name", "guild", "category_id", "_permissions", "_type", "_state", "_cs_permissions")
+
+    def __init__(
+        self, *, state: ConnectionState, data: PartialSlashChannelPayload, guild: Optional[Guild] = None
+    ) -> None:
+        self.id: int = int(data["id"])
+        self.name: str = data["name"]
         self.guild: Optional[Guild] = guild
-        self.category_id: Optional[int] = data.get("parent_id") and int(data['parent_id'])
+        self.category_id: Optional[int] = data.get("parent_id") and int(data["parent_id"])
         self._state: ConnectionState = state
-        self._type: int = data['type']
-        self._permissions: int = int(data['permissions'])
+        self._type: int = data["type"]
+        self._permissions: int = int(data["permissions"])
 
     @cached_slot_property("_cs_permissions")
     def author_permissions(self) -> Permissions:
@@ -166,7 +161,7 @@ class PartialSlashChannel(discord.abc.Messageable, Hashable):
         .. note::
             This requires the ``guild`` intent to be enabled
         """
-        return self._parent_id and self.guild.get_channel(self._parent_id) # type: ignore
+        return self._parent_id and self.guild.get_channel(self._parent_id)  # type: ignore
 
     @property
     def type(self) -> ChannelType:
@@ -181,7 +176,7 @@ class PartialSlashChannel(discord.abc.Messageable, Hashable):
             ("id", self.id),
             ("name", self.name),
             ("category_id", self.category_id),
-            ("author_permissions", self.author_permissions)
+            ("author_permissions", self.author_permissions),
         ]
         joined = " ".join("%s=%r" % t for t in attrs)
         return f"<{self.__class__.__name__} {joined}>"

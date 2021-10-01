@@ -1742,4 +1742,3 @@ class Client:
     def application_command(self, cls: ApplicationCommand) -> ApplicationCommand:
         self._application_command_store.add_command(cls)
         return cls
-
