@@ -57,6 +57,11 @@ class _BaseGuildChannel(_BaseChannel):
 class PartialChannel(_BaseChannel):
     type: ChannelType
 
+class PartialSlashChannel(_BaseChannel):
+    type: ChannelType
+    permissions: Snowflake
+    parent_id: Snowflake
+
 
 class _TextChannelOptional(TypedDict, total=False):
     topic: str

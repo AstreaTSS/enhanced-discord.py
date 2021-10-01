@@ -49,7 +49,7 @@ from .enums import ChannelType, StagePrivacyLevel, try_enum, VoiceRegion, VideoQ
 from .mixins import Hashable
 from .object import Object
 from . import utils
-from .utils import MISSING
+from .utils import MISSING, cached_slot_property
 from .asset import Asset
 from .errors import ClientException, InvalidArgument
 from .stage_instance import StageInstance
@@ -65,6 +65,7 @@ __all__ = (
     "StoreChannel",
     "GroupChannel",
     "PartialMessageable",
+    "PartialSlashChannel"
 )
 
 if TYPE_CHECKING:
@@ -85,6 +86,7 @@ if TYPE_CHECKING:
         CategoryChannel as CategoryChannelPayload,
         StoreChannel as StoreChannelPayload,
         GroupDMChannel as GroupChannelPayload,
+        PartialSlashChannel as PartialSlashChannelPayload
     )
     from .types.snowflake import SnowflakeList
 
@@ -92,6 +94,97 @@ if TYPE_CHECKING:
 async def _single_delete_strategy(messages: Iterable[Message]):
     for m in messages:
         await m.delete()
+
+
+class PartialSlashChannel(discord.abc.Messageable, Hashable):
+    """
+    Represents a channel given from a slash command invokation.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two channels are equal.
+
+        .. describe:: x != y
+
+            Checks if two channels are not equal.
+
+        .. describe:: hash(x)
+
+            Returns the channel's hash.
+
+        .. describe:: str(x)
+
+            Returns the channel's name.
+
+        .. describe:: int(x)
+
+            Returns the channel's ID.
+
+    Attributes
+    -----------
+    name: :class:`str`
+        The channel name.
+    guild: Optional[:class:`Guild`]
+        The guild the channel belongs to.
+    id: :class:`int`
+        The channel ID.
+    category_id: Optional[:class:`int`]
+        The category channel ID this channel belongs to, if applicable.
+
+    """
+    __slots__ = (
+        "id",
+        "name",
+        "guild",
+        "category_id",
+        "_permissions",
+        "_type",
+        "_state",
+        "_cs_permissions"
+    )
+    def __init__(self, *, state: ConnectionState, data: PartialSlashChannelPayload, guild: Optional[Guild] = None) -> None:
+        self.id: int = int(data['id'])
+        self.name: str = data['name']
+        self.guild: Optional[Guild] = guild
+        self.category_id: Optional[int] = data.get("parent_id") and int(data['parent_id'])
+        self._state: ConnectionState = state
+        self._type: int = data['type']
+        self._permissions: int = int(data['permissions'])
+
+    @cached_slot_property("_cs_permissions")
+    def author_permissions(self) -> Permissions:
+        """:class:`Permissions`: The permissions the user invoking the command has in the channel"""
+        return Permissions(self._permissions)
+
+    @property
+    def category(self) -> Optional[CategoryChannel]:
+        """
+        Optional[:class:`CategoryChannel`]: The category this channel belongs to.
+
+        .. note::
+            This requires the ``guild`` intent to be enabled
+        """
+        return self._parent_id and self.guild.get_channel(self._parent_id) # type: ignore
+
+    @property
+    def type(self) -> ChannelType:
+        """:class:`ChannelType`: The channel's Discord type."""
+        return try_enum(ChannelType, self._type)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        attrs = [
+            ("id", self.id),
+            ("name", self.name),
+            ("category_id", self.category_id),
+            ("author_permissions", self.author_permissions)
+        ]
+        joined = " ".join("%s=%r" % t for t in attrs)
+        return f"<{self.__class__.__name__} {joined}>"
 
 
 class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):

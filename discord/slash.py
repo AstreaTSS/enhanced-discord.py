@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import traceback
 from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable
 
@@ -10,7 +11,7 @@ from .interactions import Interaction
 from .member import Member
 from .user import User
 from .abc import GuildChannel
-from .channel import DMChannel
+from .channel import DMChannel, _channel_factory, TextChannel, PartialSlashChannel
 from .role import Role
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .http import HTTPClient
     from .types.snowflake import Snowflake
-    from .types.interactions import ApplicationCommand
+    from .types.interactions import ApplicationCommand, ApplicationCommandInteractionData, ApplicationCommandInteractionDataOption
 
 __all__ = ("Command", "Option")
 
@@ -28,8 +29,7 @@ application_option_type__lookup = {
     bool: 5,
     Member: 6,
     User: 6,
-    GuildChannel: 7,
-    DMChannel: 7,
+    PartialSlashChannel: 7,
     Role: 8,
     float: 10,
 }
@@ -64,6 +64,32 @@ def _option_to_dict(option: _OptionData) -> dict:
 
     return payload
 
+def _parse_user(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> Union[User, Member]:
+    target = argument['value']
+    if "members" in interaction.data['resolved']: # we're in a guild, parse a member not a user
+        payload = interaction.data['resolved']['members'][target]
+        payload['user'] = interaction.data['resolved']['users'][target]
+        return Member(data=payload, state=state, guild=interaction.guild) # type: ignore
+
+    return User(state=state, data=interaction.data['resolved']['users'][target])
+
+def _parse_channel(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> PartialSlashChannel:
+    target = argument['value']
+    resolved = interaction.data['resolved']['channels'][target]
+
+    return PartialSlashChannel(state=state, data=resolved, guild=interaction.guild) # type: ignore
+
+def _parse_role(interaction: Interaction, state: ConnectionState, argument: ApplicationCommandInteractionDataOption) -> Role:
+    target = argument['value']
+    resolved = interaction.data['resolved']['roles'][target]
+
+    return Role(guild=interaction.guild, state=state, data=resolved) # type: ignore
+
+_parse_index = {
+    6: _parse_user,
+    7: _parse_channel,
+    8: _parse_role
+}
 
 T = TypeVar("T")
 
@@ -216,6 +242,20 @@ class Command(metaclass=CommandMeta):
 
         return payload
 
+    def _handle_arguments(self, state: ConnectionState):
+        intr: ApplicationCommandInteractionData = self.interaction.data
+
+        parsed = {}
+
+        for option in intr['options']:
+            if option['type'] in {3, 4, 5, 10}:
+                parsed[option['name']] = option['value']
+            else:
+                parsed[option['name']] = _parse_index[option['type']](self.interaction, state, option)
+
+        self.__dict__.update(parsed)
+
+
     async def callback(self) -> None:
         ...
 
@@ -318,5 +358,6 @@ class CommandState:
         inst = cls()
         inst.client = client
         inst.interaction = interaction
+        inst._handle_arguments(self.state)
 
         await inst.callback()
