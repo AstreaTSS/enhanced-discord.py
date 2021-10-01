@@ -310,11 +310,9 @@ class CommandState:
 
                 self.pre_registration[int(x)].append(command)
 
-    async def dispatch(self, client: Client, interaction: Interaction):
-        print(interaction, self.command_store)
-
-        cls = self.command_store.get(interaction.id)
-        if not cls:
+    async def dispatch(self, client: Client, interaction: Interaction) -> None:
+        cls = self.command_store.get(int(interaction.data['id']))
+        if cls is None:
             return
 
         inst = cls()
