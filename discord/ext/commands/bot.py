@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import collections
 import collections.abc
+from functools import cached_property
 
 import inspect
 import importlib.util
@@ -72,7 +73,9 @@ from .cog import Cog
 if TYPE_CHECKING:
     import importlib.machinery
 
+    from discord.role import Role
     from discord.message import Message
+    from discord.abc import PartialMessageableChannel
     from ._types import (
         Check,
         CoroFunc,
@@ -94,9 +97,16 @@ CXT = TypeVar("CXT", bound="Context")
 
 class _FakeSlashMessage(discord.PartialMessage):
     activity = application = edited_at = reference = webhook_id = None
-    attachments = components = reactions = stickers = mentions = []
-    author: Union[discord.User, discord.Member]
+    attachments = components = reactions = stickers = []
     tts = False
+
+    raw_mentions = discord.Message.raw_mentions
+    clean_content = discord.Message.clean_content
+    channel_mentions = discord.Message.channel_mentions
+    raw_role_mentions = discord.Message.raw_role_mentions
+    raw_channel_mentions = discord.Message.raw_channel_mentions
+
+    author: Union[discord.User, discord.Member]
 
     @classmethod
     def from_interaction(
@@ -107,6 +117,22 @@ class _FakeSlashMessage(discord.PartialMessage):
         self.author = interaction.user
 
         return self
+
+    @cached_property
+    def mentions(self) -> List[Union[discord.Member, discord.User]]:
+        client = self._state._get_client()
+        if self.guild:
+            ensure_user = lambda id: self.guild.get_member(id) or client.get_user(id) # type: ignore
+        else:
+            ensure_user = client.get_user
+
+        return discord.utils._unique(filter(None, map(ensure_user, self.raw_mentions)))
+
+    @cached_property
+    def role_mentions(self) -> List[Role]:
+        if self.guild is None:
+            return []
+        return discord.utils._unique(filter(None, map(self.guild.get_role, self.raw_role_mentions)))
 
 
 def when_mentioned(bot: Union[Bot, AutoShardedBot], msg: Message) -> List[str]:
