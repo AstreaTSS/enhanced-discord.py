@@ -151,6 +151,7 @@ class ApplicationCommandResolvedPartialChannel(TypedDict):
 class ApplicationCommandInteractionDataResolved(TypedDict, total=False):
     users: Dict[Snowflake, User]
     members: Dict[Snowflake, Member]
+    messages: Dict[Snowflake, Message]
     roles: Dict[Snowflake, Role]
     channels: Dict[Snowflake, ApplicationCommandResolvedPartialChannel]
 

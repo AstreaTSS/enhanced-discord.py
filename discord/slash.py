@@ -9,9 +9,9 @@ from .utils import MISSING
 from .enums import ApplicationCommandType
 from .interactions import Interaction
 from .member import Member
+from .message import Message
 from .user import User
-from .abc import GuildChannel
-from .channel import DMChannel, _channel_factory, TextChannel, PartialSlashChannel
+from .channel import PartialSlashChannel
 from .role import Role
 
 if TYPE_CHECKING:
@@ -144,7 +144,7 @@ class CommandMeta(type):
         parent: Command = MISSING,
         guilds: List[Snowflake] = MISSING,
     ):
-        attrs["_arguments_"] = arguments = []
+        attrs["_arguments_"] = arguments = []  # type: List[_OptionData]
         attrs["_type_"] = type
         attrs["_children_"] = []
         attrs["_permissions_"] = {}
@@ -179,6 +179,12 @@ class CommandMeta(type):
                 default = attr
 
             arguments.append(_OptionData(k, v, description, default))
+
+        if type is ApplicationCommandType.user_command and (len(arguments) != 1 or arguments[0].name != "target"):
+            print(arguments)
+            raise RuntimeError("User Commands must take exactly one argument, named 'target'")  # TODO: exceptions
+        elif type is ApplicationCommandType.message_command and (len(arguments) != 1 or arguments[0].name != "message"):
+            raise RuntimeError("Message Commands must take exactly one argument, named 'message'")  # TODO: exceptions
 
         t = super().__new__(mcs, classname, bases, attrs)
 
@@ -243,12 +249,15 @@ class Command(metaclass=CommandMeta):
         options = []
         payload = {
             "name": cls._name_,
-            "description": cls._description_ or "no description",
             "type": cls._type_.value,  # type: ignore
-            "options": options,
         }
-        for option in cls._arguments_:
-            options.append(_option_to_dict(option))
+
+        if cls._type_ is ApplicationCommandType.slash_command:
+            for option in cls._arguments_:
+                options.append(_option_to_dict(option))
+
+            payload["description"] = cls._description_ or "no description"
+            payload["options"] = options
 
         return payload
 
@@ -257,11 +266,27 @@ class Command(metaclass=CommandMeta):
 
         parsed = {}
 
-        for option in intr["options"]:
-            if option["type"] in {3, 4, 5, 10}:
-                parsed[option["name"]] = option["value"]
+        if self._type_ is ApplicationCommandType.slash_command:
+            for option in intr["options"]:
+                if option["type"] in {3, 4, 5, 10}:
+                    parsed[option["name"]] = option["value"]
+                else:
+                    parsed[option["name"]] = _parse_index[option["type"]](self.interaction, state, option)
+        elif self._type_ is ApplicationCommandType.message_command:
+            item = intr["resolved"]["messages"].popitem()[1]
+            parsed["message"] = Message(state=state, channel=self.interaction.channel, data=item)  # type: ignore
+
+        elif self._type_ is ApplicationCommandType.user_command:
+            user = intr["resolved"]["users"].popitem()[1]
+            if "members" in intr["resolved"]:
+                p = intr["resolved"]["members"].popitem()[1]
+                p["user"] = user
+                target = Member(data=p, guild=self.interaction.guild, state=state)  # type: ignore
+
             else:
-                parsed[option["name"]] = _parse_index[option["type"]](self.interaction, state, option)
+                target = User(state=state, data=user)
+
+            parsed["target"] = target
 
         self.__dict__.update(parsed)
 
