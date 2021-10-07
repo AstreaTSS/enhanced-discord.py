@@ -188,8 +188,8 @@ class HTTPClient:
         self.proxy_auth: Optional[aiohttp.BasicAuth] = proxy_auth
         self.use_clock: bool = not unsync_clock
 
-        user_agent = "DiscordBot (https://github.com/iDevision/enhanced-discord.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
-        self.user_agent: str = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
+        u_agent = "DiscordBot (https://github.com/iDevision/enhanced-discord.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
+        self.user_agent: str = u_agent.format(__version__, sys.version_info, aiohttp.__version__)
 
     def recreate(self) -> None:
         if self.__session.closed:

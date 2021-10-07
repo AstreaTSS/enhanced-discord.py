@@ -122,7 +122,7 @@ class _FakeSlashMessage(discord.PartialMessage):
     def mentions(self) -> List[Union[discord.Member, discord.User]]:
         client = self._state._get_client()
         if self.guild:
-            ensure_user = lambda id: self.guild.get_member(id) or client.get_user(id) # type: ignore
+            ensure_user = lambda id: self.guild.get_member(id) or client.get_user(id)  # type: ignore
         else:
             ensure_user = client.get_user
 
