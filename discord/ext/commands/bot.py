@@ -1292,7 +1292,7 @@ class BotBase(GroupMixin):
 
         # Make our fake message so we can pass it to ext.commands
         message: discord.Message = _FakeSlashMessage.from_interaction(interaction, channel)  # type: ignore
-        message.content = f"/{command_name} "
+        message.content = f"/{command_name}"
 
         # Add arguments to fake message content, in the right order
         ignore_params: List[inspect.Parameter] = []
@@ -1307,7 +1307,7 @@ class BotBase(GroupMixin):
                     else:
                         prefix = param.annotation.__commands_flag_prefix__
                         delimiter = param.annotation.__commands_flag_delimiter__
-                        message.content += f"{prefix}{name} {option['value']}{delimiter}"  # type: ignore
+                        message.content += f" {prefix}{name}{delimiter}{option['value']}"  # type: ignore
                 continue
 
             option = next((o for o in command_options if o["name"] == name), None)
@@ -1323,9 +1323,9 @@ class BotBase(GroupMixin):
             ):
                 # String with space in without "consume rest"
                 option = cast(_ApplicationCommandInteractionDataOptionString, option)
-                message.content += f"{_quote_string_safe(option['value'])} "
+                message.content += f" {_quote_string_safe(option['value'])}"
             else:
-                message.content += f'{option.get("value", "")} '
+                message.content += f' {option.get("value", "")}'
 
         ctx = await self.get_context(message)
         ctx._ignored_params = ignore_params
