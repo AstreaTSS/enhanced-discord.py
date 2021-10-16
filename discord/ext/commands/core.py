@@ -174,8 +174,12 @@ def get_signature_parameters(
         annotation = parameter.annotation
         if isinstance(parameter.default, Option):  # type: ignore
             option = parameter.default
-            descriptions[name] = option.description
             parameter = parameter.replace(default=option.default)
+            if option.name is not MISSING:
+                name = option.name
+                parameter.replace(name=name)
+
+            descriptions[name] = option.description
 
         if annotation is parameter.empty:
             params[name] = parameter
