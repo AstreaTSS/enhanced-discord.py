@@ -1284,7 +1284,11 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
             elif all([arg in application_option_channel_types for arg in annotation.__args__]):
                 option["type"] = 7
-                option["channel_types"] = [discord_value for arg in annotation.__args__ for discord_value in application_option_channel_types[arg]]
+                option["channel_types"] = [
+                    discord_value
+                    for arg in annotation.__args__
+                    for discord_value in application_option_channel_types[arg]
+                ]
 
         elif origin is Literal:
             literal_values = annotation.__args__
