@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 __all__ = ("Command", "Option")
 
 CommandT = TypeVar("CommandT", bound="Command")
+NoneType = type(None)
 
 application_option_type__lookup = {
     str: 3,
@@ -48,7 +49,7 @@ def _option_to_dict(option: _OptionData) -> dict:
     payload = {"name": option.name, "description": option.description or "none provided", "required": True}
 
     if origin is Union:
-        if arg.__args__[1] is None:  # type: ignore
+        if arg.__args__[1] is NoneType:  # type: ignore
             payload["required"] = False
             arg = arg.__args__[0]  # type: ignore
 
