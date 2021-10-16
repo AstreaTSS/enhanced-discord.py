@@ -1234,15 +1234,25 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             ctx.command = original
 
     def _param_to_options(
-        self, name: str, annotation: Any, required: bool, varadic: bool
+        self, name: str, annotation: Any, required: bool, varadic: bool, description: Optional[str] = None
     ) -> List[Optional[ApplicationCommandInteractionDataOption]]:
+
+        if description is not None:
+            self.option_descriptions[name] = description
+
+        description = self.option_descriptions[name]
         origin = getattr(annotation, "__origin__", None)
+
         if inspect.isclass(annotation) and issubclass(annotation, FlagConverter):
             return [
                 param
                 for name, flag in annotation.get_flags().items()
                 for param in self._param_to_options(
-                    name, flag.annotation, required=flag.required, varadic=flag.annotation is tuple
+                    name,
+                    flag.annotation,
+                    required=flag.required,
+                    varadic=flag.annotation is tuple,
+                    description=flag.description if flag.description is not MISSING else None,
                 )
             ]
 
@@ -1258,7 +1268,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             "type": 3,
             "name": name,
             "required": required,
-            "description": self.option_descriptions[name],
+            "description": description,
         }
 
         if origin is None:
@@ -1284,7 +1294,11 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
             elif all([arg in application_option_channel_types for arg in annotation.__args__]):
                 option["type"] = 7
-                option["channel_types"] = [discord_value for arg in annotation.__args__ for discord_value in application_option_channel_types[arg]]
+                option["channel_types"] = [
+                    discord_value
+                    for arg in annotation.__args__
+                    for discord_value in application_option_channel_types[arg]
+                ]
 
         elif origin is Literal:
             literal_values = annotation.__args__
