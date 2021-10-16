@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import json
 import traceback
-from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable
+from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable, Generic
 
 from .utils import MISSING
 from .enums import ApplicationCommandType
@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     )
 
 __all__ = ("Command", "Option")
+
+CommandT = TypeVar("CommandT", bound="Command")
 
 application_option_type__lookup = {
     str: 3,
@@ -138,15 +140,13 @@ class CommandMeta(type):
         bases: tuple,
         attrs: Dict[str, Any],
         *,
-        type: ApplicationCommandType = ApplicationCommandType.slash_command,
         name: str = MISSING,
         description: str = MISSING,
         parent: Command = MISSING,
         guilds: List[Snowflake] = MISSING,
     ):
         attrs["_arguments_"] = arguments = []  # type: List[_OptionData]
-        attrs["_type_"] = type
-        attrs["_children_"] = []
+        attrs["_children_"] = {}
         attrs["_permissions_"] = {}
 
         if name is not MISSING:
@@ -163,8 +163,7 @@ class CommandMeta(type):
 
         attrs["_parent_"] = parent
 
-        if guilds is not MISSING:
-            attrs["_guilds_"] = guilds
+        attrs["_guilds_"] = guilds or None
 
         ann = attrs.get("__annotations__", {})
 
@@ -181,7 +180,6 @@ class CommandMeta(type):
             arguments.append(_OptionData(k, v, description, default))
 
         if type is ApplicationCommandType.user_command and (len(arguments) != 1 or arguments[0].name != "target"):
-            print(arguments)
             raise RuntimeError("User Commands must take exactly one argument, named 'target'")  # TODO: exceptions
         elif type is ApplicationCommandType.message_command and (len(arguments) != 1 or arguments[0].name != "message"):
             raise RuntimeError("Message Commands must take exactly one argument, named 'message'")  # TODO: exceptions
@@ -189,7 +187,7 @@ class CommandMeta(type):
         t = super().__new__(mcs, classname, bases, attrs)
 
         if parent is not MISSING:
-            parent._children_.append(t)  # type: ignore
+            parent._children_[attrs["_name_"]] = t  # type: ignore
 
         return t
 
@@ -200,7 +198,7 @@ class Command(metaclass=CommandMeta):
     _type_: ApplicationCommandType
     _description_: Union[str, MISSING]
     _parent_: Optional[Type[Command]]
-    _children_: List[Type[Command]]
+    _children_: Dict[str, Type[Command]]
     _id_: Optional[int] = None
     _guilds_: Optional[List[Snowflake]]
     _permissions_: Optional[
@@ -243,7 +241,7 @@ class Command(metaclass=CommandMeta):
             return {
                 "name": cls._name_,
                 "description": cls._description_ or "no description",
-                "options": [x.to_dict() for x in cls._children_],
+                "options": [x.to_dict() for x in cls._children_.values()],
             }
 
         options = []
@@ -261,40 +259,62 @@ class Command(metaclass=CommandMeta):
 
         return payload
 
-    def _handle_arguments(self, state: ConnectionState):
-        intr: ApplicationCommandInteractionData = self.interaction.data
-
-        parsed = {}
-
-        if self._type_ is ApplicationCommandType.slash_command:
-            for option in intr["options"]:
-                if option["type"] in {3, 4, 5, 10}:
-                    parsed[option["name"]] = option["value"]
-                else:
-                    parsed[option["name"]] = _parse_index[option["type"]](self.interaction, state, option)
-        elif self._type_ is ApplicationCommandType.message_command:
-            item = intr["resolved"]["messages"].popitem()[1]
-            parsed["message"] = Message(state=state, channel=self.interaction.channel, data=item)  # type: ignore
-
-        elif self._type_ is ApplicationCommandType.user_command:
-            user = intr["resolved"]["users"].popitem()[1]
-            if "members" in intr["resolved"]:
-                p = intr["resolved"]["members"].popitem()[1]
-                p["user"] = user
-                target = Member(data=p, guild=self.interaction.guild, state=state)  # type: ignore
-
-            else:
-                target = User(state=state, data=user)
-
-            parsed["target"] = target
-
-        self.__dict__.update(parsed)
+    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, options: List[Any]) -> None:
+        ...
 
     async def callback(self) -> None:
         ...
 
     async def error(self, exception: Exception) -> None:
         traceback.print_exception(type(exception), exception, exception.__traceback__)
+
+
+class UserCommandMixin(Generic[CommandT]):
+    _type_ = ApplicationCommandType.user_command
+
+    target: Union[Member, User]
+
+    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _) -> None:
+        intr: ApplicationCommandInteractionData = interaction.data
+
+        user = intr["resolved"]["users"].popitem()[1]
+        if "members" in intr["resolved"]:
+            p = intr["resolved"]["members"].popitem()[1]
+            p["user"] = user
+            target = Member(data=p, guild=interaction.guild, state=state)  # type: ignore
+
+        else:
+            target = User(state=state, data=user)
+
+        self.target = target
+
+
+class MessageCommandMixin(Generic[CommandT]):
+    _type_ = ApplicationCommandType.message_command
+
+    message: Message
+
+    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _) -> None:
+        intr: ApplicationCommandInteractionData = interaction.data
+        item = intr["resolved"]["messages"].popitem()[1]
+        self.message = Message(state=state, channel=interaction.channel, data=item)  # type: ignore
+
+
+class SlashCommandMixin(Generic[CommandT]):
+    _type_ = ApplicationCommandType.slash_command
+
+    def _handle_arguments(
+        self, interaction: Interaction, state: ConnectionState, options: List[ApplicationCommandInteractionDataOption]
+    ) -> None:
+        parsed = {}
+
+        for option in options:
+            if option["type"] in {3, 4, 5, 10}:
+                parsed[option["name"]] = option["value"]
+            else:
+                parsed[option["name"]] = _parse_index[option["type"]](interaction, state, option)
+
+        self.__dict__.update(parsed)
 
 
 class CommandState:
@@ -318,7 +338,7 @@ class CommandState:
         if global_commands:
             store = {(x._name_, x.type().value): x for x in global_commands}  # type: ignore
             payload: List[ApplicationCommand] = await self.http.bulk_upsert_global_commands(
-                self._application_id, [x.to_dict() for x in global_commands]
+                self._application_id, [x.to_dict() for x in global_commands if not x._parent_]  # type: ignore
             )
             for x in payload:  # type: ApplicationCommand
                 self.command_store[int(x["id"])] = t = store[(x["name"], x["type"])]
@@ -333,7 +353,7 @@ class CommandState:
             appinfo = await self.http.application_info()
             self._application_id = appinfo["id"]
 
-        targets: Iterable[Tuple[Optional[Snowflake], List[Type[Command]]]] = None  # type: ignore
+        targets: Iterable[Tuple[Optional[Snowflake], List[Type[Command]]]]
 
         if guild:
             if int(guild) not in self.pre_registration:
@@ -349,8 +369,7 @@ class CommandState:
                 continue  # global commands
 
             store = {(x._name_, x.type().value): x for x in commands}  # type: ignore
-            t = [x.to_dict() for x in commands]
-            print(t)
+            t = [x.to_dict() for x in commands if not x._parent_]
             payload: List[ApplicationCommand] = await self.http.bulk_upsert_guild_commands(
                 self._application_id, guild, t
             )
@@ -370,6 +389,9 @@ class CommandState:
         )
 
     def add_command(self, command: Type[Command]) -> None:
+        if not hasattr(command, "_type_"):
+            raise ValueError("Application Command does not have a type mixin")
+
         if command._guilds_ is None:
             if None not in self.pre_registration:
                 self.pre_registration[None] = []
@@ -385,13 +407,23 @@ class CommandState:
                 self.pre_registration[int(x)].append(command)
 
     async def dispatch(self, client: Client, interaction: Interaction) -> None:
+        print(json.dumps(interaction.data, indent=4))
         cls = self.command_store.get(int(interaction.data["id"]))
         if cls is None:
             return
 
+        # first check if we're dealing with a subcommand
+
+        options = interaction.data.get("options")
+        if cls._type_ is ApplicationCommandType.slash_command:
+            while options and options[0]["type"] == 1:
+                name = options[0]["name"]
+                options = options[0]["options"]
+                cls = cls._children_[name]
+
         inst = cls()
         inst.client = client
         inst.interaction = interaction
-        inst._handle_arguments(self.state)
+        inst._handle_arguments(interaction, self.state, options)
 
         await inst.callback()
