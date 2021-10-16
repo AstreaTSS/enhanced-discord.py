@@ -133,6 +133,14 @@ class _OptionData:
     def __repr__(self):
         return f"<OptionData name={self.name} type={self.type} default={self.default}>"
 
+    def handle_default(self, interaction: Interaction) -> Any:
+        resp = self.default
+
+        if callable(resp):
+            resp = resp(interaction)
+
+        return resp
+
 
 class CommandMeta(type):
     def __new__(
@@ -260,9 +268,6 @@ class Command(metaclass=CommandMeta):
 
         return payload
 
-    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, options: List[Any]) -> None:
-        ...
-
     async def callback(self) -> None:
         ...
 
@@ -275,7 +280,7 @@ class UserCommandMixin(Generic[CommandT]):
 
     target: Union[Member, User]
 
-    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _) -> None:
+    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _, __) -> None:
         intr: ApplicationCommandInteractionData = interaction.data
 
         user = intr["resolved"]["users"].popitem()[1]
@@ -295,7 +300,7 @@ class MessageCommandMixin(Generic[CommandT]):
 
     message: Message
 
-    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _) -> None:
+    def _handle_arguments(self, interaction: Interaction, state: ConnectionState, _, __) -> None:
         intr: ApplicationCommandInteractionData = interaction.data
         item = intr["resolved"]["messages"].popitem()[1]
         self.message = Message(state=state, channel=interaction.channel, data=item)  # type: ignore
@@ -305,7 +310,11 @@ class SlashCommandMixin(Generic[CommandT]):
     _type_ = ApplicationCommandType.slash_command
 
     def _handle_arguments(
-        self, interaction: Interaction, state: ConnectionState, options: List[ApplicationCommandInteractionDataOption]
+        self,
+        interaction: Interaction,
+        state: ConnectionState,
+        options: List[ApplicationCommandInteractionDataOption],
+        arguments: List[_OptionData],
     ) -> None:
         parsed = {}
 
@@ -314,6 +323,11 @@ class SlashCommandMixin(Generic[CommandT]):
                 parsed[option["name"]] = option["value"]
             else:
                 parsed[option["name"]] = _parse_index[option["type"]](interaction, state, option)
+
+        unset = {x.name for x in arguments} - set(parsed.keys())
+        if unset:
+            args: Dict[str, _OptionData] = {x.name: x for x in arguments}
+            parsed.update({x: args[x].handle_default(interaction) for x in unset})
 
         self.__dict__.update(parsed)
 
@@ -425,6 +439,6 @@ class CommandState:
         inst = cls()
         inst.client = client
         inst.interaction = interaction
-        inst._handle_arguments(interaction, self.state, options)
+        inst._handle_arguments(interaction, self.state, options, inst._arguments_)  # noqa
 
         await inst.callback()
