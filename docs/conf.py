@@ -49,7 +49,7 @@ autodoc_typehints = "none"
 # napoleon_attr_annotations = False
 
 extlinks = {
-    "issue": ("https://github.com/Rapptz/discord.py/issues/%s", "GH-"),
+    "issue": ("https://github.com/iDevision/enhanced-discord.py/issues/%s", "GH-"),
 }
 
 # Links used for cross-referencing stuff in other documentation
@@ -168,9 +168,8 @@ html_context = {
 
 resource_links = {
     "discord": "https://discord.gg/TvqYBrGXEm",
-    "issues": "https://github.com/Rapptz/discord.py/issues",
-    "discussions": "https://github.com/Rapptz/discord.py/discussions",
-    "examples": f"https://github.com/Rapptz/discord.py/tree/{branch}/examples",
+    "issues": "https://github.com/iDevision/enhanced-discord.py/issues",
+    "examples": f"https://github.com/iDevision/enhanced-discord.py/tree/{branch}/examples",
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme

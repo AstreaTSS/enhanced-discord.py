@@ -17,18 +17,6 @@ The Future of enhanced-discord.py
 --------------------------
 
 Enhanced discord.py is a fork of Rapptz's discord.py, that went unmaintained (`gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_)
-
-It is currently maintained by (in alphabetical order)
-
-- Chillymosh#8175
-- Daggy#9889
-- dank Had0cK#6081
-- Dutchy#6127
-- Eyesofcreeper#0001
-- Gnome!#6669
-- IAmTomahawkx#1000
-- Jadon#2494
-
 An overview of added features is available on the `custom features page <https://enhanced-dpy.readthedocs.io/en/latest/index.html#custom-features>`_.
 
 Key Features

@@ -132,10 +132,18 @@ application_option_type_lookup = {
         discord.Member,
         discord.User,
     ): 6,  # Preferably discord.abc.User, but 'Protocols with non-method members don't support issubclass()'
-    (discord.abc.GuildChannel, discord.DMChannel): 7,
+    (discord.abc.GuildChannel, discord.Thread): 7,
     discord.Role: 8,
     float: 10,
 }
+application_option_channel_types = {
+    discord.VoiceChannel: [2],
+    discord.TextChannel: [0, 5, 6],
+    discord.CategoryChannel: [4],
+    discord.Thread: [10, 11, 12],
+    discord.StageChannel: [13],
+}
+
 
 if TYPE_CHECKING:
     P = ParamSpec("P")
@@ -330,10 +338,15 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         This overwrites the global ``slash_commands`` parameter of :class:`.Bot`.
 
         .. versionadded:: 2.0
-    slash_command_guilds: Optional[:class:`List[int]`]
+    slash_command_guilds: Optional[List[:class:`int`]]
         If this is set, only upload this slash command to these guild IDs.
 
         This overwrites the global ``slash_command_guilds`` parameter of :class:`.Bot`.
+
+        .. versionadded:: 2.0
+
+    option_descriptions: Dict[:class:`str`, :class:`str`]
+        The unpacked option descriptions from :class:`.Option`.
 
         .. versionadded:: 2.0
     """
@@ -1260,11 +1273,18 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             for python_type, discord_type in application_option_type_lookup.items():
                 if issubclass(annotation, python_type):
                     option["type"] = discord_type
+                    # Set channel types
+                    if discord_type == 7:
+                        option["channel_types"] = application_option_channel_types[annotation]
                     break
 
         elif origin is Union:
             if annotation in {Union[discord.Member, discord.Role], Union[MemberConverter, RoleConverter]}:
                 option["type"] = 9
+
+            elif all([arg in application_option_channel_types for arg in annotation.__args__]):
+                option["type"] = 7
+                option["channel_types"] = [discord_value for arg in annotation.__args__ for discord_value in application_option_channel_types[arg]]
 
         elif origin is Literal:
             literal_values = annotation.__args__
