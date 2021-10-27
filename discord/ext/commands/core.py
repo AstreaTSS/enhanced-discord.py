@@ -1264,9 +1264,10 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             annotation = str
             origin = None
 
-        if not required and origin is not None and len(annotation.__args__) == 2:
+        if not required and origin is Union and annotation.__args__[-1] is type(None):
             # Unpack Optional[T] (Union[T, None]) into just T
-            annotation, origin = annotation.__args__[0], None
+            annotation = annotation.__args__[0]
+            origin = getattr(annotation, "__origin__", None)
 
         option: Dict[str, Any] = {
             "type": 3,
