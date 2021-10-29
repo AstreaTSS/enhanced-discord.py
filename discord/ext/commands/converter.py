@@ -1052,10 +1052,7 @@ class Option(Generic[T, DT]):  # type: ignore
         self.name: str = name
 
 
-if TYPE_CHECKING:
-    # Terrible workaround for type checking reasons
-    def Option(default: T = inspect.Parameter.empty, *, description: str, name: str = discord.utils.MISSING) -> T:
-        ...
+Option: Any
 
 
 def _convert_to_bool(argument: str) -> bool:
