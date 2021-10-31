@@ -188,16 +188,17 @@ def _is_submodule(parent: str, child: str) -> bool:
 
 def _unwrap_slash_groups(
     data: ApplicationCommandInteractionData,
-) -> Tuple[str, List[ApplicationCommandInteractionDataOption]]:
+) -> Tuple[str, Dict[str, ApplicationCommandInteractionDataOption]]:
     command_name = data["name"]
-    command_options = data.get("options") or []
-    while any(o["type"] in {1, 2} for o in command_options):  # type: ignore
-        for option in command_options:  # type: ignore
-            if option["type"] in {1, 2}:  # type: ignore
-                command_name += f' {option["name"]}'  # type: ignore
-                command_options = option.get("options") or []
-
-    return command_name, command_options
+    command_options: Any = data.get("options") or []
+    while True:
+        try:
+            option = next(o for o in command_options if o["type"] in {1, 2})
+        except StopIteration:
+            return command_name, {o["name"]: o for o in command_options}
+        else:
+            command_name += f' {option["name"]}'
+            command_options = option.get("options") or []
 
 
 def _quote_string_safe(string: str) -> str:
@@ -1299,7 +1300,7 @@ class BotBase(GroupMixin):
         for name, param in command.clean_params.items():
             if inspect.isclass(param.annotation) and issubclass(param.annotation, FlagConverter):
                 for name, flag in param.annotation.get_flags().items():
-                    option = next((o for o in command_options if o["name"] == name), None)
+                    option = command_options.get(name)
 
                     if option is None:
                         if flag.required:
@@ -1310,7 +1311,7 @@ class BotBase(GroupMixin):
                         message.content += f" {prefix}{name}{delimiter}{option['value']}"  # type: ignore
                 continue
 
-            option = next((o for o in command_options if o["name"] == name), None)
+            option = command_options.get(name)
             if option is None:
                 if param.default is param.empty and not command._is_typing_optional(param.annotation):
                     raise errors.MissingRequiredArgument(param)

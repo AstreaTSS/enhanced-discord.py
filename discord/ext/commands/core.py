@@ -174,8 +174,12 @@ def get_signature_parameters(
         annotation = parameter.annotation
         if isinstance(parameter.default, Option):  # type: ignore
             option = parameter.default
-            descriptions[name] = option.description
             parameter = parameter.replace(default=option.default)
+            if option.name is not MISSING:
+                name = option.name
+                parameter.replace(name=name)
+
+            descriptions[name] = option.description
 
         if annotation is parameter.empty:
             params[name] = parameter
@@ -1234,15 +1238,25 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             ctx.command = original
 
     def _param_to_options(
-        self, name: str, annotation: Any, required: bool, varadic: bool
+        self, name: str, annotation: Any, required: bool, varadic: bool, description: Optional[str] = None
     ) -> List[Optional[ApplicationCommandInteractionDataOption]]:
+
+        if description is not None:
+            self.option_descriptions[name] = description
+
+        description = self.option_descriptions[name]
         origin = getattr(annotation, "__origin__", None)
+
         if inspect.isclass(annotation) and issubclass(annotation, FlagConverter):
             return [
                 param
                 for name, flag in annotation.get_flags().items()
                 for param in self._param_to_options(
-                    name, flag.annotation, required=flag.required, varadic=flag.annotation is tuple
+                    name,
+                    flag.annotation,
+                    required=flag.required,
+                    varadic=flag.annotation is tuple,
+                    description=flag.description if flag.description is not MISSING else None,
                 )
             ]
 
@@ -1250,15 +1264,16 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
             annotation = str
             origin = None
 
-        if not required and origin is not None and len(annotation.__args__) == 2:
+        if not required and origin is Union and annotation.__args__[-1] is type(None):
             # Unpack Optional[T] (Union[T, None]) into just T
-            annotation, origin = annotation.__args__[0], None
+            annotation = annotation.__args__[0]
+            origin = getattr(annotation, "__origin__", None)
 
         option: Dict[str, Any] = {
             "type": 3,
             "name": name,
             "required": required,
-            "description": self.option_descriptions[name],
+            "description": description,
         }
 
         if origin is None:

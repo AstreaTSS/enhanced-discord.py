@@ -81,6 +81,8 @@ class Flag:
     ------------
     name: :class:`str`
         The name of the flag.
+    description: :class:`str`
+        The description of the flag.
     aliases: List[:class:`str`]
         The aliases of the flag name.
     attribute: :class:`str`
@@ -97,6 +99,7 @@ class Flag:
     """
 
     name: str = MISSING
+    description: str = MISSING
     aliases: List[str] = field(default_factory=list)
     attribute: str = MISSING
     annotation: Any = MISSING
@@ -117,6 +120,7 @@ class Flag:
 def flag(
     *,
     name: str = MISSING,
+    description: str = MISSING,
     aliases: List[str] = MISSING,
     default: Any = MISSING,
     max_args: int = MISSING,
@@ -129,6 +133,8 @@ def flag(
     ------------
     name: :class:`str`
         The flag name. If not given, defaults to the attribute name.
+    description: :class:`str`
+        Description of the flag for the slash commands options. The default value is `'no description'`.
     aliases: List[:class:`str`]
         Aliases to the flag name. If not given no aliases are set.
     default: Any
@@ -143,7 +149,9 @@ def flag(
         Whether multiple given values overrides the previous value. The default
         value depends on the annotation given.
     """
-    return Flag(name=name, aliases=aliases, default=default, max_args=max_args, override=override)
+    return Flag(
+        name=name, description=description, aliases=aliases, default=default, max_args=max_args, override=override
+    )
 
 
 def validate_flag_name(name: str, forbidden: Set[str]):

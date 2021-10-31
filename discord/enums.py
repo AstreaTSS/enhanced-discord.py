@@ -56,6 +56,7 @@ __all__ = (
     "InteractionResponseType",
     "ApplicationCommandType",
     "NSFWLevel",
+    "ProtocolURL",
 )
 
 
@@ -530,6 +531,7 @@ class InteractionType(Enum):
     ping = 1
     application_command = 2
     component = 3
+    application_command_autocomplete = 4
 
 
 class ApplicationCommandType(Enum):
@@ -546,6 +548,7 @@ class InteractionResponseType(Enum):
     deferred_channel_message = 5  # (with source)
     deferred_message_update = 6  # for components
     message_update = 7  # for components
+    application_command_autocomplete_result = 8
 
 
 class VideoQualityMode(Enum):
@@ -595,6 +598,74 @@ class NSFWLevel(Enum, comparable=True):
     explicit = 1
     safe = 2
     age_restricted = 3
+
+
+class ProtocolURL(Enum):
+
+    # General
+
+    home = "discord://-/channels/@me/"
+    nitro = "discord://-/store"
+    apps = "discord://-/apps"  # Breaks the client on windows (Shows download links for different OS)
+    guild_discovery = "discord://-/guild-discovery"
+    guild_create = "discord://-/guilds/create"
+    guild_invite = "discord://-/invite/{invite_code}"
+
+    # Settings
+
+    account_settings = "discord://-/settings/account"
+    profile_settings = "discord://-/settings/profile-customization"
+    privacy_settings = "discord://-/settings/privacy-and-safety"
+    safety_settings = "discord://-/settings/privacy-and-safety"  # Alias
+    authorized_apps_settings = "discord://-/settings/authorized-apps"
+    connections_settings = "discord://-/settings/connections"
+    nitro_settings = "discord://-/settings/premium"  # Same as store, but inside of settings
+    guild_premium_subscription = "discord://-/settings/premium-guild-subscription"
+    subscription_settings = "discord://-/settings/subscriptions"
+    gift_inventory_settings = "discord://-/settings/inventory"
+    billing_settings = "discord://-/settings/billing"
+    appearance_settings = "discord://-/settings/appearance"
+    accessibility_settings = "discord://-/settings/accessibility"
+    voice_video_settings = "discord://-/settings/voice"
+    text_images_settings = "discord://-/settings/text"
+    notifications_settings = "discord://-/settings/notifications"
+    keybinds_settings = "discord://-/settings/keybinds"
+    language_settings = "discord://-/settings/locale"
+    windows_settings = "discord://-/settings/windows"  # Doesnt work if used on wrong platform
+    linux_settings = "discord://-/settings/linux"  # Doesnt work if used on wrong platform
+    streamer_mode_settings = "discord://-/settings/streamer-mode"
+    advanced_settings = "discord://-/settings/advanced"
+    activity_status_settings = "discord://-/settings/activity-status"
+    game_overlay_settings = "discord://-/settings/overlay"
+    hypesquad_settings = "discord://-/settings/hypesquad-online"
+
+    changelogs = "discord://-/settings/changelogs"
+
+    # Doesn't work if you don't have it actually activated. Just blank screen.
+    experiments = "discord://-/settings/experiments"
+
+    developer_options = "discord://-/settings/developer-options"  # Same as experiments
+    hotspot_options = "discord://-/settings/hotspot-options"  # Same as experiments
+
+    # Users, Guilds, and DMs
+
+    user_profile = "discord://-/users/{user_id}"
+    dm_channel = "discord://-/channels/@me/{channel_id}"
+    dm_message = "discord://-/channels/@me/{channel_id}/{message_id}"
+    guild_channel = "discord://-/channels/{guild_id}/{channel_id}"
+    guild_message = "discord://-/channels/{guild_id}/{channel_id}/{message_id}"
+    guild_membership_screening = "discord://-/member-verification/{guild_id}"
+
+    # Library
+
+    games_library = "discord://-/library"
+    library_settings = "discord://-/library/settings"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def format(self, **kwargs: Any) -> str:
+        return self.value.format(**kwargs)
 
 
 T = TypeVar("T")

@@ -51,6 +51,7 @@ if TYPE_CHECKING:
 
     from .types.interactions import (
         Interaction as InteractionPayload,
+        ApplicationCommandOptionChoice,
         InteractionData,
     )
     from .guild import Guild
@@ -629,6 +630,43 @@ class InteractionResponse:
 
         if view and not view.is_finished():
             state.store_view(view, message_id)
+
+        self.responded_at = utils.utcnow()
+
+    async def autocomplete_result(self, choices: List[ApplicationCommandOptionChoice]):
+        """|coro|
+
+        Responds to this autocomplete interaction with the resulting choices.
+        This should rarely be used.
+
+        Parameters
+        -----------
+        choices: List[Dict[:class:`str`, :class:`str`]]
+            The choices to be shown in the autocomplete UI of the user.
+            Must be a list of dictionaries with the ``name`` and ``value`` keys.
+
+        Raises
+        -------
+        HTTPException
+            Responding to the interaction failed.
+        InteractionResponded
+            This interaction has already been responded to before.
+        """
+        if self.is_done():
+            raise InteractionResponded(self._parent)
+
+        parent = self._parent
+        if parent.type is not InteractionType.application_command_autocomplete:
+            return
+
+        adapter = async_context.get()
+        await adapter.create_interaction_response(
+            parent.id,
+            parent.token,
+            session=parent._session,
+            type=InteractionResponseType.application_command_autocomplete_result.value,
+            data={"choices": choices},
+        )
 
         self.responded_at = utils.utcnow()
 

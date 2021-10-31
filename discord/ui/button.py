@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Callable, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union
 import inspect
 import os
 
@@ -60,7 +60,7 @@ class Button(Item[V]):
         The ID of the button that gets received during an interaction.
         If this button is for a URL, it does not have a custom ID.
     url: Optional[:class:`str`]
-        The URL this button sends you to.
+        The URL this button sends you to. This param is automatically casted to :class:`str`.
     disabled: :class:`bool`
         Whether the button is disabled or not.
     label: Optional[:class:`str`]
@@ -91,7 +91,7 @@ class Button(Item[V]):
         label: Optional[str] = None,
         disabled: bool = False,
         custom_id: Optional[str] = None,
-        url: Optional[str] = None,
+        url: Optional[Any] = None,
         emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
         row: Optional[int] = None,
     ):
@@ -117,7 +117,7 @@ class Button(Item[V]):
         self._underlying = ButtonComponent._raw_construct(
             type=ComponentType.button,
             custom_id=custom_id,
-            url=url,
+            url=str(url) if url else None,
             disabled=disabled,
             label=label,
             style=style,

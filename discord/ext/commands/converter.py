@@ -1032,6 +1032,8 @@ class Option(Generic[T, DT]):  # type: ignore
         The default for this option, overwrites Option during parsing.
     description: :class:`str`
         The description for this option, is unpacked to :attr:`.Command.option_descriptions`
+    name: :class:`str`
+        The name of the option. This defaults to the parameter name.
     """
 
     description: DT
@@ -1039,17 +1041,18 @@ class Option(Generic[T, DT]):  # type: ignore
     __slots__ = (
         "default",
         "description",
+        "name",
     )
 
-    def __init__(self, default: T = inspect.Parameter.empty, *, description: DT) -> None:
+    def __init__(
+        self, default: T = inspect.Parameter.empty, *, description: DT, name: str = discord.utils.MISSING
+    ) -> None:
         self.description = description
         self.default = default
+        self.name: str = name
 
 
-if TYPE_CHECKING:
-    # Terrible workaround for type checking reasons
-    def Option(default: T = inspect.Parameter.empty, *, description: str) -> T:
-        ...
+Option: Any
 
 
 def _convert_to_bool(argument: str) -> bool:

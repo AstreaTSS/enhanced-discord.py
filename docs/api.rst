@@ -2656,6 +2656,182 @@ of :class:`enum.Enum`.
 
         The guild may contain NSFW content.
 
+.. class:: ProtocolURL
+    
+    Represents the different `discord://` URLs
+
+    .. attribute:: home
+        
+        The URL for the home page.
+    
+    .. attribute:: nitro
+        
+        The URL for the nitro page.
+    
+    .. attribute:: apps
+        
+        The URL for the downloads page. This breaks the client and needs it to be restarted.
+
+    .. attribute:: guild_discovery
+        
+        The URL for the server discovery page.
+    
+    .. attribute:: new_guild
+        
+        The URL for the new server modal.
+    
+    .. attribute:: guild_invite
+        
+        The URL for the join server page. Needs to be formatted with `invite_code`.
+    
+    .. attribute:: account_settings
+        
+        The URL for the "My Account" page in settings.
+
+    .. attribute:: profile_settings
+        
+        The URL for the "User Profile" page in settings.
+    
+    .. attribute:: privacy_settings
+        
+        The URL for the "Privacy & Safety" page in settings.
+    
+    .. attribute:: safety_settings
+        
+        An alias for :attr:`privacy_settings`.
+
+    .. attribute:: authorized_apps_settings
+        
+        The URL for the "Authorized Apps" page in settings.
+
+    .. attribute:: connections_settings
+        
+        The URL for the "Connections" page in settings.
+
+    .. attribute:: nitro_settings
+        
+        The URL for the "Discord Nitro" page in settings. Same page as :attr:`nitro`, but inside of settings.
+
+    .. attribute:: guild_premium_subscription
+        
+        The URL for the "Server Boost" page in settings.
+    
+    .. attribute:: subscription_settings
+        
+        The URL for the "Subscriptions" page in settings.
+    
+    .. attribute:: gift_inventory_settings
+        
+        The URL for the "Gift Inventory" page in settings.
+
+    .. attribute:: billing_settings
+        
+        The URL for the "Billing" page in settings.
+    
+    .. attribute:: appearance_settings
+        
+        The URL for the "Appearance" page in settings.
+    
+    .. attribute:: accessibility_settings
+        
+        The URL for the "Accessibility" page in settings.
+    
+    .. attribute:: voice_video_settings
+        
+        The URL for the "Voice & Video" page in settings.
+    
+    .. attribute:: test_images_settings
+        
+        The URL for the "Text & Images" page in settings.
+    
+    .. attribute:: notifications_settings
+        
+        The URL for the "Notifications" page in settings.
+    
+    .. attribute:: keybinds_settings
+        
+        The URL for the "Keybinds" page in settings.
+    
+    .. attribute:: language_settings
+        
+        The URL for the "Language" page in settings.
+    
+    .. attribute:: windows_settings
+        
+        The URL for the "Windows Settings" page in settings. Leads to a blank screen if used on the wrong platform.
+
+    .. attribute:: linux_settings
+        
+        The URL for the "Linux Settings" page in settings. Leads to a blank screen if used on the wrong platform.
+
+    .. attribute:: streamer_mode_settings
+        
+        The URL for the "Streamer Mode" page in settings.
+    
+    .. attribute:: advanced_settings
+        
+        The URL for the "Advanced" page in settings.
+    
+    .. attribute:: activity_status_settings
+        
+        The URL for the "Activity Status" page in settings.
+    
+    .. attribute:: game_overlay_settings
+        
+        The URL for the "Game Overlay" page in settings.
+    
+    .. attribute:: hypesquad_settings
+        
+        The URL for the "Hypesquad" page in settings.
+    
+    .. attribute:: changelogs
+        
+        The URL for the changelogs modal.
+
+    .. attribute:: experiments
+        
+        The URL for the "Experiments" page in settings. Leads to a blank screen if it isn't activated.
+
+    .. attribute:: developer_options
+        
+        The URL for the "Developer Options" page in settings. Leads to a blank screen if it isn't activated.
+    
+    .. attribute:: hotspot_options
+        
+        The URL for the "Hotspot Options" page in settings. Leads to a blank screen if it isn't activated.
+
+    .. attribute:: user_profile
+        
+        The URL for a user's profile modal. Needs to be formatted with `user_id`.
+
+    .. attribute:: dm_channel
+        
+        The URL for a DM channel. Needs to be formatted with `channel_id`.
+
+    .. attribute:: dm_message
+        
+        The URL for a message in a DM channel. Needs to be formatted with `channel_id` and `message_id`.
+    
+    .. attribute:: guild_channel
+        
+        The URL for a guild channel. Needs to be formatted with `guild_id` and `channel_id`.
+
+    .. attribute:: guild_message
+        
+        The URL for a guild channel. Needs to be formatted with `guild_id`, `channel_id` and `message_id`.
+
+    .. attribute:: guild_membership_screening
+        
+        The URL for a guild's membership screening page. Needs to be formatted with `guild_id`.
+
+    .. attribute:: games_library
+        
+        The URL for the game library.
+
+    .. attribute:: library_settings
+        
+        The URL for the library settings.
+
 Async Iterator
 ----------------
 

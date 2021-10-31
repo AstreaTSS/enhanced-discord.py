@@ -22,11 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
+import asyncio
 
 import inspect
 import re
 from datetime import timedelta
-from typing import Any, Dict, Generic, List, Literal, Optional, TYPE_CHECKING, TypeVar, Union, overload
+from typing import Any, Dict, Generic, List, Literal, NoReturn, Optional, TYPE_CHECKING, TypeVar, Union, overload
 
 import discord.abc
 import discord.utils
@@ -155,6 +156,7 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         self.command_failed: bool = command_failed
         self.current_parameter: Optional[inspect.Parameter] = current_parameter
         self._ignored_params: List[inspect.Parameter] = []
+        self._typing_task: Optional[asyncio.Task[NoReturn]] = None
         self._state: ConnectionState = self.message._state
 
     async def invoke(self, command: Command[CogT, P, T], /, *args: P.args, **kwargs: P.kwargs) -> T:
@@ -455,6 +457,10 @@ class Context(discord.abc.Messageable, Generic[BotT]):
             In a normal context, it always returns a :class:`.Message`
         """
 
+        if self._typing_task is not None:
+            self._typing_task.cancel()
+            self._typing_task = None
+
         if self.interaction is None or (
             self.interaction.response.responded_at is not None
             and discord.utils.utcnow() - self.interaction.response.responded_at >= timedelta(minutes=15)
@@ -500,3 +506,30 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         self, content: Optional[str] = None, return_message: bool = True, **kwargs: Any
     ) -> Optional[Union[Message, WebhookMessage]]:
         return await self.send(content, return_message=return_message, reference=self.message, **kwargs)  # type: ignore
+
+    async def defer(self, *, ephemeral: bool = False, trigger_typing: bool = True) -> None:
+        """|coro|
+
+        Defers the Slash Command interaction if ran in a slash command **or**
+
+        Loops triggering ``Bot is typing`` in the channel if run in a message command.
+
+        Parameters
+        ------------
+        trigger_typing: :class:`bool`
+            Indicates whether to trigger typing in a message command.
+        ephemeral: :class:`bool`
+            Indicates whether the deferred message will eventually be ephemeral in a slash command.
+        """
+
+        if self.interaction is None:
+            if self._typing_task is None and trigger_typing:
+
+                async def typing_task():
+                    while True:
+                        await self.trigger_typing()
+                        await asyncio.sleep(10)
+
+                self._typing_task = self.bot.loop.create_task(typing_task())
+        else:
+            await self.interaction.response.defer(ephemeral=ephemeral)
