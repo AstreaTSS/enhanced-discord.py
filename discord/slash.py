@@ -5,7 +5,7 @@ import json
 import traceback
 from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable, Generic
 
-from .utils import MISSING
+from .utils import MISSING, maybe_coroutine
 from .enums import ApplicationCommandType
 from .interactions import Interaction
 from .member import Member
@@ -271,6 +271,12 @@ class Command(metaclass=CommandMeta):
     async def callback(self) -> None:
         ...
 
+    async def check(self) -> bool:
+        return True
+
+    async def pre_check(self) -> bool:
+        return True
+
     async def error(self, exception: Exception) -> None:
         traceback.print_exception(type(exception), exception, exception.__traceback__)
 
@@ -439,6 +445,20 @@ class CommandState:
         inst = cls()
         inst.client = client
         inst.interaction = interaction
-        inst._handle_arguments(interaction, self.state, options, inst._arguments_)  # noqa
+
+        try:
+            await self._dispatch(inst, options)
+        except Exception as e:
+            client.dispatch("application_command_error", interaction, e)  # TODO: document this one
+            await maybe_coroutine(inst.error, e)
+
+    async def _dispatch(self, inst: CommandT, options):
+        if not await maybe_coroutine(inst.pre_check):
+            raise RuntimeError(f"The pre-check for {inst._name_} failed.")
+
+        inst._handle_arguments(inst.interaction, self.state, options, inst._arguments_)
+
+        if not await maybe_coroutine(inst.check):
+            raise RuntimeError(f"The check for {inst._name_} failed.")
 
         await inst.callback()
