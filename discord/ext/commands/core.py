@@ -808,7 +808,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         kwargs = ctx.kwargs
 
         view = ctx.view
-        iterator = iter(self.params.items())
+        iterator = iter(self.params.values())
 
         if self.cog is not None:
             # we have 'self' as the first parameter so just advance
@@ -824,7 +824,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
         except StopIteration:
             raise discord.ClientException(f'Callback for {self.name} command is missing "ctx" parameter.')
 
-        for name, param in iterator:
+        for param in iterator:
             ctx.current_parameter = param
             if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY):
                 transformed = await self.transform(ctx, param)
@@ -834,9 +834,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
                 if self.rest_is_raw:
                     converter = get_converter(param)
                     argument = view.read_rest()
-                    kwargs[name] = await run_converters(ctx, converter, argument, param)
+                    kwargs[param.name] = await run_converters(ctx, converter, argument, param)
                 else:
-                    kwargs[name] = await self.transform(ctx, param)
+                    kwargs[param.name] = await self.transform(ctx, param)
                 break
             elif param.kind == param.VAR_POSITIONAL:
                 if view.eof and self.require_var_positional:
