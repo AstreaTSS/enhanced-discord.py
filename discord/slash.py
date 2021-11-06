@@ -46,7 +46,12 @@ def _option_to_dict(option: _OptionData) -> dict:
     origin = getattr(option.type, "__origin__", None)
     arg = option.type
 
-    payload = {"name": option.name, "description": option.description or "none provided", "required": True}
+    payload = {
+        "name": option.name,
+        "description": option.description or "none provided",
+        "required": True,
+        "autocomplete": option.autocomplete
+    }
 
     if origin is Union:
         if arg.__args__[1] is NoneType:  # type: ignore
@@ -65,6 +70,16 @@ def _option_to_dict(option: _OptionData) -> dict:
         ):
             payload["type"] = application_option_type__lookup[python_type_]
             payload["choices"] = [{"name": literal_value, "value": literal_value} for literal_value in values]
+
+    if option.min is not MISSING and option.max is not MISSING:
+        if arg not in {int, float}:
+            raise ValueError(f"min or max specified for argument {option.name}, but is not an int or float.") # TODO: exceptions
+
+        if option.min > option.max:
+            raise ValueError(f"{option} has a min value that is greater than the max value")
+
+        payload["min_value"] = option.min
+        payload["max_value"] = option.max
 
     if origin is not Literal:
         payload["type"] = application_option_type__lookup.get(arg, 3)
@@ -108,27 +123,44 @@ T = TypeVar("T")
 
 
 class Option:
-    __slots__ = ("description", "default")
+    __slots__ = ('autocomplete', 'default', 'description', 'max', 'min')
 
-    def __init__(self, description: str = MISSING, *, default: T = MISSING) -> None:
+    def __init__(
+            self,
+            description: str = MISSING,
+            *,
+            autocomplete: bool = False,
+            min: Union[int, float] = MISSING,
+            max: Union[int, float] = MISSING,
+            default: T = MISSING
+    ) -> None:
         self.description = description
         self.default = default
+        self.autocomplete = autocomplete
+        self.min = min
+        self.max = max
 
 
 class _OptionData:
-    __slots__ = ("name", "type", "description", "default")
+    __slots__ = ('autocomplete', 'default', 'description', 'max', 'min', 'name', 'type')
 
     def __init__(
         self,
         name: str,
         type_: Type[Any],
+        autocomplete: bool,
         description: Optional[str] = MISSING,
         default: T = MISSING,
+        min: Union[int, float] = MISSING,
+        max: Union[int, float] = MISSING,
     ) -> None:
         self.name = name
         self.type = type_
+        self.autocomplete = autocomplete
         self.description = description
         self.default = default
+        self.min = min
+        self.max = max
 
     def __repr__(self):
         return f"<OptionData name={self.name} type={self.type} default={self.default}>"
@@ -178,15 +210,19 @@ class CommandMeta(type):
 
         for k, v in ann.items():
             attr = attrs.get(k, MISSING)
-            default = description = MISSING
+            default = description = min_ = max_ = MISSING
+            autocomplete = False
             if isinstance(attr, Option):
                 default = attr.default
                 description = attr.description
+                autocomplete = attr.autocomplete
+                min_ = attr.min
+                max_ = attr.max
 
             elif attr is not MISSING:
                 default = attr
 
-            arguments.append(_OptionData(k, v, description, default))
+            arguments.append(_OptionData(k, v, autocomplete, description, default, min_, max_))
 
         if type is ApplicationCommandType.user_command and (len(arguments) != 1 or arguments[0].name != "target"):
             raise RuntimeError("User Commands must take exactly one argument, named 'target'")  # TODO: exceptions
