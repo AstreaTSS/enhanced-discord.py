@@ -125,7 +125,8 @@ _parse_index = {6: _parse_user, 7: _parse_channel, 8: _parse_role}
 T = TypeVar("T")
 AutoCompleteResponseT = TypeVar("AutoCompleteResponseT", bound="AutoCompleteResponse")
 
-class AutoCompleteResponse(dict): # TODO: docs
+
+class AutoCompleteResponse(dict):  # TODO: docs
     def add_option(self, name: str, value: Union[str, int]) -> AutoCompleteResponseT:
         self[name] = value
         return self
@@ -549,6 +550,6 @@ class CommandState:
         try:
             resp = list(resp)
         except Exception as e:
-            raise ValueError(f"Could not format the returned autocomplete object properly.") from e # TODO: exceptions
+            raise ValueError(f"Could not format the returned autocomplete object properly.") from e  # TODO: exceptions
 
         await inst.interaction.response.autocomplete_result(resp)
