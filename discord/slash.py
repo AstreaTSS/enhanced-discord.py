@@ -6,7 +6,7 @@ import traceback
 from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable, Generic
 
 from .utils import MISSING, maybe_coroutine
-from .enums import ApplicationCommandType
+from .enums import ApplicationCommandType, InteractionType
 from .interactions import Interaction
 from .member import Member
 from .message import Message
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         ApplicationCommand,
         ApplicationCommandInteractionData,
         ApplicationCommandInteractionDataOption,
+        ApplicationCommandOptionChoice
     )
 
 __all__ = ("Command", "Option")
@@ -307,6 +308,9 @@ class Command(metaclass=CommandMeta):
     async def callback(self) -> None:
         ...
 
+    async def autocomplete(self, options: Dict[str, Union[int, float, str]], focused: str) -> List[ApplicationCommandOptionChoice]:
+        ...
+
     async def check(self) -> bool:
         return True
 
@@ -482,13 +486,21 @@ class CommandState:
         inst.client = client
         inst.interaction = interaction
 
-        try:
-            await self._dispatch(inst, options)
-        except Exception as e:
-            client.dispatch("application_command_error", interaction, e)  # TODO: document this one
-            await maybe_coroutine(inst.error, e)
+        if interaction.type is InteractionType.application_command_autocomplete:
+            try:
+                await self._dispatch_autocomplete(inst, options)
+            except Exception as e:
+                client.dispatch("application_command_error", interaction, e)  # TODO: document this one
+                await maybe_coroutine(inst.error, e)
 
-    async def _dispatch(self, inst: CommandT, options):
+        else:
+            try:
+                await self._dispatch(inst, options)
+            except Exception as e:
+                client.dispatch("application_command_error", interaction, e)  # TODO: document this one
+                await maybe_coroutine(inst.error, e)
+
+    async def _dispatch(self, inst: CommandT, options: List[ApplicationCommandInteractionDataOption]):
         if not await maybe_coroutine(inst.pre_check):
             raise RuntimeError(f"The pre-check for {inst._name_} failed.")
 
@@ -498,3 +510,23 @@ class CommandState:
             raise RuntimeError(f"The check for {inst._name_} failed.")
 
         await inst.callback()
+
+    async def _dispatch_autocomplete(self, inst: CommandT, data: List[ApplicationCommandInteractionDataOption]):
+        options: Dict[str, Optional[Union[str, int, float]]] = {x.name: None for x in inst._arguments_}
+        focused = None
+        print(data)
+
+        for x in data:
+            val = x['value']
+
+            if x['type'] in {6, 7, 8}:
+                options[x['name']] = int(val)
+
+            else:
+                options[x['name']] = val
+
+            if "focused" in x:
+                focused = x['name']
+
+        resp = await inst.autocomplete(options, focused)
+        await inst.interaction.response.autocomplete_result(resp)
