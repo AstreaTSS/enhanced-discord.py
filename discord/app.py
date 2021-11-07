@@ -26,7 +26,13 @@ if TYPE_CHECKING:
         ApplicationCommandOptionChoice
     )
 
-__all__ = ("Command", "Option")
+__all__ = (
+    "Command",
+    "UserCommand",
+    "MessageCommand",
+    "SlashCommand",
+    "Option"
+)
 
 CommandT = TypeVar("CommandT", bound="Command")
 NoneType = type(None)
@@ -321,7 +327,7 @@ class Command(metaclass=CommandMeta):
         traceback.print_exception(type(exception), exception, exception.__traceback__)
 
 
-class UserCommandMixin(Generic[CommandT]):
+class UserCommand(Command, Generic[CommandT]):
     _type_ = ApplicationCommandType.user_command
 
     target: Union[Member, User]
@@ -341,7 +347,7 @@ class UserCommandMixin(Generic[CommandT]):
         self.target = target
 
 
-class MessageCommandMixin(Generic[CommandT]):
+class MessageCommand(Command, Generic[CommandT]):
     _type_ = ApplicationCommandType.message_command
 
     message: Message
@@ -352,7 +358,7 @@ class MessageCommandMixin(Generic[CommandT]):
         self.message = Message(state=state, channel=interaction.channel, data=item)  # type: ignore
 
 
-class SlashCommandMixin(Generic[CommandT]):
+class SlashCommand(Command, Generic[CommandT]):
     _type_ = ApplicationCommandType.slash_command
 
     def _handle_arguments(
