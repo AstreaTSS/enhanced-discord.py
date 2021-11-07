@@ -23,16 +23,10 @@ if TYPE_CHECKING:
         ApplicationCommand,
         ApplicationCommandInteractionData,
         ApplicationCommandInteractionDataOption,
-        ApplicationCommandOptionChoice
+        ApplicationCommandOptionChoice,
     )
 
-__all__ = (
-    "Command",
-    "UserCommand",
-    "MessageCommand",
-    "SlashCommand",
-    "Option"
-)
+__all__ = ("Command", "UserCommand", "MessageCommand", "SlashCommand", "Option")
 
 CommandT = TypeVar("CommandT", bound="Command")
 NoneType = type(None)
@@ -57,7 +51,7 @@ def _option_to_dict(option: _OptionData) -> dict:
         "name": option.name,
         "description": option.description or "none provided",
         "required": True,
-        "autocomplete": option.autocomplete
+        "autocomplete": option.autocomplete,
     }
 
     if origin is Union:
@@ -80,7 +74,9 @@ def _option_to_dict(option: _OptionData) -> dict:
 
     if option.min is not MISSING and option.max is not MISSING:
         if arg not in {int, float}:
-            raise ValueError(f"min or max specified for argument {option.name}, but is not an int or float.") # TODO: exceptions
+            raise ValueError(
+                f"min or max specified for argument {option.name}, but is not an int or float."
+            )  # TODO: exceptions
 
         if option.min > option.max:
             raise ValueError(f"{option} has a min value that is greater than the max value")
@@ -130,16 +126,16 @@ T = TypeVar("T")
 
 
 class Option:
-    __slots__ = ('autocomplete', 'default', 'description', 'max', 'min')
+    __slots__ = ("autocomplete", "default", "description", "max", "min")
 
     def __init__(
-            self,
-            description: str = MISSING,
-            *,
-            autocomplete: bool = False,
-            min: Union[int, float] = MISSING,
-            max: Union[int, float] = MISSING,
-            default: T = MISSING
+        self,
+        description: str = MISSING,
+        *,
+        autocomplete: bool = False,
+        min: Union[int, float] = MISSING,
+        max: Union[int, float] = MISSING,
+        default: T = MISSING,
     ) -> None:
         self.description = description
         self.default = default
@@ -149,7 +145,7 @@ class Option:
 
 
 class _OptionData:
-    __slots__ = ('autocomplete', 'default', 'description', 'max', 'min', 'name', 'type')
+    __slots__ = ("autocomplete", "default", "description", "max", "min", "name", "type")
 
     def __init__(
         self,
@@ -314,7 +310,9 @@ class Command(metaclass=CommandMeta):
     async def callback(self) -> None:
         ...
 
-    async def autocomplete(self, options: Dict[str, Union[int, float, str]], focused: str) -> List[ApplicationCommandOptionChoice]:
+    async def autocomplete(
+        self, options: Dict[str, Union[int, float, str]], focused: str
+    ) -> List[ApplicationCommandOptionChoice]:
         ...
 
     async def check(self) -> bool:
@@ -523,16 +521,16 @@ class CommandState:
         print(data)
 
         for x in data:
-            val = x['value']
+            val = x["value"]
 
-            if x['type'] in {6, 7, 8}:
-                options[x['name']] = int(val)
+            if x["type"] in {6, 7, 8}:
+                options[x["name"]] = int(val)
 
             else:
-                options[x['name']] = val
+                options[x["name"]] = val
 
             if "focused" in x:
-                focused = x['name']
+                focused = x["name"]
 
         resp = await inst.autocomplete(options, focused)
         await inst.interaction.response.autocomplete_result(resp)
