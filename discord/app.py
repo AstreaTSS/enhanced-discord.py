@@ -26,7 +26,7 @@ if TYPE_CHECKING:
         ApplicationCommandOptionChoice,
     )
 
-__all__ = ("Command", "UserCommand", "MessageCommand", "SlashCommand", "Option")
+__all__ = ("AutoCompleteResponse", "Command", "UserCommand", "MessageCommand", "SlashCommand", "Option")
 
 CommandT = TypeVar("CommandT", bound="Command")
 NoneType = type(None)
@@ -123,6 +123,19 @@ def _parse_role(
 _parse_index = {6: _parse_user, 7: _parse_channel, 8: _parse_role}
 
 T = TypeVar("T")
+AutoCompleteResponseT = TypeVar("AutoCompleteResponseT", bound="AutoCompleteResponse")
+
+class AutoCompleteResponse(dict): # TODO: docs
+    def add_option(self, name: str, value: Union[str, int]) -> AutoCompleteResponseT:
+        self[name] = value
+        return self
+
+    def remove_option(self, name: str) -> AutoCompleteResponseT:
+        del self[name]
+        return self
+
+    def __iter__(self):
+        return iter([{"name": k, "value": v} for k, v in self.items()])
 
 
 class Option:
@@ -533,4 +546,9 @@ class CommandState:
                 focused = x["name"]
 
         resp = await inst.autocomplete(options, focused)
+        try:
+            resp = list(resp)
+        except Exception as e:
+            raise ValueError(f"Could not format the returned autocomplete object properly.") from e # TODO: exceptions
+
         await inst.interaction.response.autocomplete_result(resp)
