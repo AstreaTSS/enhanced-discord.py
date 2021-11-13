@@ -1337,6 +1337,7 @@ class BotBase(GroupMixin):
         await self.process_commands(message)
 
     async def on_interaction(self, interaction: discord.Interaction):
+        await discord.Client.on_interaction(interaction)
         await self.process_slash_commands(interaction)
 
 
