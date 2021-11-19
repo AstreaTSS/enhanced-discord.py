@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import inspect
+import sys
 import json
 import traceback
 from typing import List, Optional, TypeVar, Dict, Any, TYPE_CHECKING, Union, Type, Literal, Tuple, Iterable, Generic
 
-from .utils import MISSING, maybe_coroutine
+from .utils import MISSING, maybe_coroutine, evaluate_annotation
 from .enums import ApplicationCommandType, InteractionType
 from .interactions import Interaction
 from .member import Member
@@ -314,6 +315,8 @@ class Command(metaclass=CommandMeta):
 
         if cls._type_ is ApplicationCommandType.slash_command:
             for option in cls._arguments_:
+                if isinstance(option.type, str):
+                    option.type = evaluate_annotation(option.type, sys.modules[cls.__module__].__dict__, {}, {})
                 options.append(_option_to_dict(option))
 
             payload["description"] = cls._description_ or "no description"
