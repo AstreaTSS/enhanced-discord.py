@@ -234,6 +234,20 @@ class Guild(Hashable):
         The guild's NSFW level.
 
         .. versionadded:: 2.0
+        
+    approximate_member_count: Optional[:class:`int`]
+        The approximate number of members in the guild. This is ``None`` unless the guild is obtained
+        using :meth:`Client.fetch_guild` with ``with_counts=True``.
+        
+        .. versionadded:: 2.0
+        
+    approximate_presence_count: Optional[:class:`int`]
+        The approximate number of members currently active in the guild.
+        This includes idle, dnd, online, and invisible members. Offline members are excluded.
+        This is ``None`` unless the guild is obtained using :meth:`Client.fetch_guild`
+        with ``with_counts=True``.
+        
+        .. versionadded:: 2.0
     """
 
     __slots__ = (
@@ -276,6 +290,8 @@ class Guild(Hashable):
         "_public_updates_channel_id",
         "_stage_instances",
         "_threads",
+        "approximate_member_count",
+        "approximate_presence_count"
     )
 
     _PREMIUM_GUILD_LIMITS: ClassVar[Dict[Optional[int], _GuildLimit]] = {
@@ -445,6 +461,8 @@ class Guild(Hashable):
         self._rules_channel_id: Optional[int] = utils._get_as_snowflake(guild, "rules_channel_id")
         self._public_updates_channel_id: Optional[int] = utils._get_as_snowflake(guild, "public_updates_channel_id")
         self.nsfw_level: NSFWLevel = try_enum(NSFWLevel, guild.get("nsfw_level", 0))
+        self.approximate_presence_count = guild.get('approximate_presence_count')
+        self.approximate_member_count = guild.get('approximate_member_count')
 
         self._stage_instances: Dict[int, StageInstance] = {}
         for s in guild.get("stage_instances", []):
@@ -2448,6 +2466,8 @@ class Guild(Hashable):
         colour: Union[Colour, int] = ...,
         hoist: bool = ...,
         mentionable: bool = ...,
+        icon: bytes = ...,
+        emoji: str = ...,
     ) -> Role:
         ...
 
@@ -2461,6 +2481,8 @@ class Guild(Hashable):
         color: Union[Colour, int] = ...,
         hoist: bool = ...,
         mentionable: bool = ...,
+        icon: bytes = ...,
+        emoji: str = ...,
     ) -> Role:
         ...
 
@@ -2473,6 +2495,8 @@ class Guild(Hashable):
         colour: Union[Colour, int] = MISSING,
         hoist: bool = MISSING,
         mentionable: bool = MISSING,
+        icon: bytes = MISSING,
+        emoji: str = MISSING,
         reason: Optional[str] = None,
     ) -> Role:
         """|coro|
@@ -2502,6 +2526,10 @@ class Guild(Hashable):
         mentionable: :class:`bool`
             Indicates if the role should be mentionable by others.
             Defaults to ``False``.
+        emoji: :class:`str`
+            The unicode emoji that is shown next to users with the role.
+        icon: :class:`bytes`
+            A custom image that is shown next to users with the role.
         reason: Optional[:class:`str`]
             The reason for creating this role. Shows up on the audit log.
 
@@ -2539,6 +2567,12 @@ class Guild(Hashable):
 
         if name is not MISSING:
             fields["name"] = name
+
+        if emoji is not MISSING:
+            fields["unicode_emoji"] = emoji
+
+        if icon is not MISSING:
+            fields["icon"] = utils._bytes_to_base64_data(icon)
 
         data = await self._state.http.create_role(self.id, reason=reason, **fields)
         role = Role(guild=self, data=data, state=self._state)
