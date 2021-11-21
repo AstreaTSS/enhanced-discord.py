@@ -525,7 +525,7 @@ class CommandState:
         if not await maybe_coroutine(inst.pre_check):
             raise RuntimeError(f"The pre-check for {inst._name_} failed.")
 
-        inst._handle_arguments(inst.interaction, self.state, options, inst._arguments_)
+        inst._handle_arguments(inst.interaction, self.state, options or [], inst._arguments_)
 
         if not await maybe_coroutine(inst.check):
             raise RuntimeError(f"The check for {inst._name_} failed.")
