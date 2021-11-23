@@ -1231,6 +1231,7 @@ class Webhook(BaseWebhook):
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: Literal[True],
+        delete_after: float = MISSING,
     ) -> WebhookMessage:
         ...
 
@@ -1251,6 +1252,7 @@ class Webhook(BaseWebhook):
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: Literal[False] = ...,
+        delete_after: float = MISSING,
     ) -> None:
         ...
 
@@ -1270,6 +1272,7 @@ class Webhook(BaseWebhook):
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: bool = False,
+        delete_after: float = MISSING,
     ) -> Optional[WebhookMessage]:
         """|coro|
 
@@ -1335,6 +1338,10 @@ class Webhook(BaseWebhook):
             The thread to send this webhook to.
 
             .. versionadded:: 2.0
+        delete_after: :class:`float`
+            If provided, the number of seconds to wait in the background
+            before deleting the message we just sent. If the deletion fails,
+            then it is silently ignored.
 
         Raises
         --------
@@ -1398,6 +1405,9 @@ class Webhook(BaseWebhook):
         if thread is not MISSING:
             thread_id = thread.id
 
+        if delete_after is not MISSING:
+            wait = True
+
         data = await adapter.execute_webhook(
             self.id,
             self.token,
@@ -1417,6 +1427,9 @@ class Webhook(BaseWebhook):
             message_id = None if msg is None else msg.id
             self._state.store_view(view, message_id)
 
+        if delete_after is not MISSING:
+            await msg.delete(delay=delete_after)
+    
         return msg
 
     async def fetch_message(self, id: int) -> WebhookMessage:
