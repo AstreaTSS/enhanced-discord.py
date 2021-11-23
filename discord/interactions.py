@@ -544,6 +544,7 @@ class InteractionResponse:
         self.responded_at = utils.utcnow()
 
         if delete_after is not MISSING:
+
             async def delete(delay: float):
                 await asyncio.sleep(delay)
                 try:

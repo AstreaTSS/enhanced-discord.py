@@ -524,6 +524,32 @@ class Thread(Messageable, Hashable):
 
         return ret
 
+    async def archive(self, *, locked: bool = MISSING) -> Thread:
+        """|coro|
+
+        A shortcut method to :meth:`.edit` to archive and lock the :class:`.Thread`.
+
+        .. versionadded:: 2.0
+
+        Parameters
+        ------------
+        locked: :class:`bool`
+            Whether to lock the thread or not.
+
+        Raises
+        -------
+        Forbidden
+            You do not have permissions to edit the thread.
+        HTTPException
+            Editing the thread failed.
+
+        Returns
+        --------
+        :class:`Thread`
+            The newly edited thread.
+        """
+        return await self.edit(archived=True, locked=locked)
+
     async def edit(
         self,
         *,

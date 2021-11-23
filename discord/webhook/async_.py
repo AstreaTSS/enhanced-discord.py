@@ -1429,7 +1429,7 @@ class Webhook(BaseWebhook):
 
         if delete_after is not MISSING:
             await msg.delete(delay=delete_after)
-    
+
         return msg
 
     async def fetch_message(self, id: int) -> WebhookMessage:

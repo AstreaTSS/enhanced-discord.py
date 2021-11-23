@@ -219,7 +219,6 @@ class KeepAliveHandler:
             "d": self.ws.sequence,  # type: ignore
         }
 
-
     def start(self) -> None:
         self.ws.loop.create_task(self.run())
 

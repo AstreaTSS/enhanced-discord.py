@@ -940,10 +940,10 @@ class SyncWebhook(BaseWebhook):
         )
 
         msg = self._create_message(data) if wait else None
-        
+
         if delete_after is not MISSING:
             msg.delete(delay=delete_after)
-        
+
         return msg
 
     def fetch_message(self, id: int, /) -> SyncWebhookMessage:
