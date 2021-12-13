@@ -790,6 +790,7 @@ class SyncWebhook(BaseWebhook):
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         wait: Literal[True],
+        delete_after: float = MISSING,
     ) -> SyncWebhookMessage:
         ...
 
@@ -807,6 +808,7 @@ class SyncWebhook(BaseWebhook):
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         wait: Literal[False] = ...,
+        delete_after: float = MISSING,
     ) -> None:
         ...
 
@@ -824,6 +826,7 @@ class SyncWebhook(BaseWebhook):
         allowed_mentions: AllowedMentions = MISSING,
         thread: Snowflake = MISSING,
         wait: bool = False,
+        delete_after: float = MISSING,
     ) -> Optional[SyncWebhookMessage]:
         """Sends a message using the webhook.
 
@@ -872,6 +875,10 @@ class SyncWebhook(BaseWebhook):
             The thread to send this message to.
 
             .. versionadded:: 2.0
+        delete_after: :class:`float`
+            If provided, the number of seconds to wait in the background
+            before deleting the message we just sent. If the deletion fails,
+            then it is silently ignored.
 
         Raises
         --------
@@ -918,6 +925,9 @@ class SyncWebhook(BaseWebhook):
         if thread is not MISSING:
             thread_id = thread.id
 
+        if delete_after is not MISSING:
+            wait = True
+
         data = adapter.execute_webhook(
             self.id,
             self.token,
@@ -928,8 +938,13 @@ class SyncWebhook(BaseWebhook):
             thread_id=thread_id,
             wait=wait,
         )
-        if wait:
-            return self._create_message(data)
+
+        msg = self._create_message(data) if wait else None
+
+        if delete_after is not MISSING:
+            msg.delete(delay=delete_after)
+
+        return msg
 
     def fetch_message(self, id: int, /) -> SyncWebhookMessage:
         """Retrieves a single :class:`~discord.SyncWebhookMessage` owned by this webhook.

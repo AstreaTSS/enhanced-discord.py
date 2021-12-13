@@ -471,7 +471,6 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         kwargs.pop("nonce", None)
         kwargs.pop("stickers", None)
         kwargs.pop("reference", None)
-        kwargs.pop("delete_after", None)
         kwargs.pop("mention_author", None)
 
         if not (
