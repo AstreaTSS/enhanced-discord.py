@@ -73,17 +73,19 @@ def _option_to_dict(option: _OptionData) -> dict:
             payload["type"] = application_option_type__lookup[python_type_]
             payload["choices"] = [{"name": literal_value, "value": literal_value} for literal_value in values]
 
-    if option.min is not MISSING and option.max is not MISSING:
+    if option.min is not MISSING or option.max is not MISSING:
         if arg not in {int, float}:
             raise ValueError(
                 f"min or max specified for argument {option.name}, but is not an int or float."
             )  # TODO: exceptions
 
-        if option.min > option.max:
+        if option.min and option.max and option.min > option.max:
             raise ValueError(f"{option} has a min value that is greater than the max value")
 
-        payload["min_value"] = option.min
-        payload["max_value"] = option.max
+        if option.min:
+            payload["min_value"] = option.min
+        if option.max:
+            payload["max_value"] = option.max
 
     if origin is not Literal:
         payload["type"] = application_option_type__lookup.get(arg, 3)
