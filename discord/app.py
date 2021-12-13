@@ -303,11 +303,16 @@ class Command(metaclass=CommandMeta):
     @classmethod
     def to_dict(cls) -> dict:
         if cls._type_ is ApplicationCommandType.slash_command and cls._children_:
-            return {
+            payload = {
                 "name": cls._name_,
                 "description": cls._description_ or "no description",
                 "options": [x.to_dict() for x in cls._children_.values()],
             }
+
+            if cls._parent_:
+                payload["type"] = 2
+
+            return payload
 
         options = []
         payload = {
@@ -500,7 +505,7 @@ class CommandState:
 
         options = interaction.data.get("options")
         if cls._type_ is ApplicationCommandType.slash_command:
-            while options and options[0]["type"] == 1:
+            while options and options[0]["type"] in {1, 2}:
                 name = options[0]["name"]
                 options = options[0]["options"]
                 cls = cls._children_[name]
