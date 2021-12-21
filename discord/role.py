@@ -23,17 +23,18 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TypeVar, Union, overload, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TypeVar, Union, TYPE_CHECKING
 
+from .asset import Asset
 from .permissions import Permissions
 from .errors import InvalidArgument
 from .colour import Colour
 from .mixins import Hashable
-from .utils import snowflake_time, _get_as_snowflake, MISSING
+from .utils import snowflake_time, _get_as_snowflake, MISSING, _bytes_to_base64_data
 
 __all__ = (
-    'RoleTags',
-    'Role',
+    "RoleTags",
+    "Role",
 )
 
 if TYPE_CHECKING:
@@ -68,19 +69,19 @@ class RoleTags:
     """
 
     __slots__ = (
-        'bot_id',
-        'integration_id',
-        '_premium_subscriber',
+        "bot_id",
+        "integration_id",
+        "_premium_subscriber",
     )
 
     def __init__(self, data: RoleTagPayload):
-        self.bot_id: Optional[int] = _get_as_snowflake(data, 'bot_id')
-        self.integration_id: Optional[int] = _get_as_snowflake(data, 'integration_id')
+        self.bot_id: Optional[int] = _get_as_snowflake(data, "bot_id")
+        self.integration_id: Optional[int] = _get_as_snowflake(data, "integration_id")
         # NOTE: The API returns "null" for this if it's valid, which corresponds to None.
         # This is different from other fields where "null" means "not there".
         # So in this case, a value of None is the same as True.
         # Which means we would need a different sentinel.
-        self._premium_subscriber: Optional[Any] = data.get('premium_subscriber', MISSING)
+        self._premium_subscriber: Optional[Any] = data.get("premium_subscriber", MISSING)
 
     def is_bot_managed(self) -> bool:
         """:class:`bool`: Whether the role is associated with a bot."""
@@ -96,12 +97,12 @@ class RoleTags:
 
     def __repr__(self) -> str:
         return (
-            f'<RoleTags bot_id={self.bot_id} integration_id={self.integration_id} '
-            f'premium_subscriber={self.is_premium_subscriber()}>'
+            f"<RoleTags bot_id={self.bot_id} integration_id={self.integration_id} "
+            f"premium_subscriber={self.is_premium_subscriber()}>"
         )
 
 
-R = TypeVar('R', bound='Role')
+R = TypeVar("R", bound="Role")
 
 
 class Role(Hashable):
@@ -158,7 +159,15 @@ class Role(Hashable):
     guild: :class:`Guild`
         The guild the role belongs to.
     hoist: :class:`bool`
-         Indicates if the role will be displayed separately from other members.
+        Indicates if the role will be displayed separately from other members.
+    icon: Optional[:class:`Asset`]
+        A custom image that is shown next to users with the role.
+
+        .. versionadded:: 2.0
+    emoji: Optional[:class:`str`]
+        The unicode emoji that is shown next to users with the role.
+
+        .. versionadded:: 2.0
     position: :class:`int`
         The position of the role. This number is usually positive. The bottom
         role has a position of 0.
@@ -181,23 +190,25 @@ class Role(Hashable):
     """
 
     __slots__ = (
-        'id',
-        'name',
-        '_permissions',
-        '_colour',
-        'position',
-        'managed',
-        'mentionable',
-        'hoist',
-        'guild',
-        'tags',
-        '_state',
+        "id",
+        "name",
+        "_permissions",
+        "_colour",
+        "position",
+        "managed",
+        "mentionable",
+        "hoist",
+        "guild",
+        "tags",
+        "_icon",
+        "emoji",
+        "_state",
     )
 
     def __init__(self, *, guild: Guild, state: ConnectionState, data: RolePayload):
         self.guild: Guild = guild
         self._state: ConnectionState = state
-        self.id: int = int(data['id'])
+        self.id: int = int(data["id"])
         self._update(data)
 
     def __str__(self) -> str:
@@ -207,14 +218,14 @@ class Role(Hashable):
         return self.id
 
     def __repr__(self) -> str:
-        return f'<Role id={self.id} name={self.name!r}>'
+        return f"<Role id={self.id} name={self.name!r}>"
 
     def __lt__(self: R, other: R) -> bool:
         if not isinstance(other, Role) or not isinstance(self, Role):
             return NotImplemented
 
         if self.guild != other.guild:
-            raise RuntimeError('cannot compare roles from two different guilds.')
+            raise RuntimeError("cannot compare roles from two different guilds.")
 
         # the @everyone role is always the lowest role in hierarchy
         guild_id = self.guild.id
@@ -246,17 +257,19 @@ class Role(Hashable):
         return not r
 
     def _update(self, data: RolePayload):
-        self.name: str = data['name']
-        self._permissions: int = int(data.get('permissions', 0))
-        self.position: int = data.get('position', 0)
-        self._colour: int = data.get('color', 0)
-        self.hoist: bool = data.get('hoist', False)
-        self.managed: bool = data.get('managed', False)
-        self.mentionable: bool = data.get('mentionable', False)
+        self.name: str = data["name"]
+        self._permissions: int = int(data.get("permissions", 0))
+        self.position: int = data.get("position", 0)
+        self._colour: int = data.get("color", 0)
+        self.hoist: bool = data.get("hoist", False)
+        self.emoji: Optional[str] = data.get("unicode_emoji")
+        self._icon: Optional[str] = data.get("icon")
+        self.managed: bool = data.get("managed", False)
+        self.mentionable: bool = data.get("mentionable", False)
         self.tags: Optional[RoleTags]
 
         try:
-            self.tags = RoleTags(data['tags'])
+            self.tags = RoleTags(data["tags"])
         except KeyError:
             self.tags = None
 
@@ -316,7 +329,14 @@ class Role(Hashable):
     @property
     def mention(self) -> str:
         """:class:`str`: Returns a string that allows you to mention a role."""
-        return f'<@&{self.id}>'
+        return f"<@&{self.id}>"
+
+    @property
+    def icon(self) -> Optional[Asset]:
+        """Optional[:class:`Asset`]: Returns the custom icon shown next to users with the role, if it exists."""
+        if self._icon is None:
+            return
+        return Asset._from_role_icon(self._state, self.id, self._icon)
 
     @property
     def members(self) -> List[Member]:
@@ -361,6 +381,8 @@ class Role(Hashable):
         hoist: bool = MISSING,
         mentionable: bool = MISSING,
         position: int = MISSING,
+        icon: bytes = MISSING,
+        emoji: str = MISSING,
         reason: Optional[str] = MISSING,
     ) -> Optional[Role]:
         """|coro|
@@ -393,6 +415,10 @@ class Role(Hashable):
         position: :class:`int`
             The new role's position. This must be below your top role's
             position or it will fail.
+        emoji: :class:`str`
+            The unicode emoji that is shown next to users with the role.
+        icon: :class:`bytes`
+            A custom image that is shown next to users with the role.
         reason: Optional[:class:`str`]
             The reason for editing this role. Shows up on the audit log.
 
@@ -420,21 +446,27 @@ class Role(Hashable):
 
         if colour is not MISSING:
             if isinstance(colour, int):
-                payload['color'] = colour
+                payload["color"] = colour
             else:
-                payload['color'] = colour.value
+                payload["color"] = colour.value
 
         if name is not MISSING:
-            payload['name'] = name
+            payload["name"] = name
 
         if permissions is not MISSING:
-            payload['permissions'] = permissions.value
+            payload["permissions"] = permissions.value
 
         if hoist is not MISSING:
-            payload['hoist'] = hoist
+            payload["hoist"] = hoist
 
         if mentionable is not MISSING:
-            payload['mentionable'] = mentionable
+            payload["mentionable"] = mentionable
+
+        if emoji is not MISSING:
+            payload["unicode_emoji"] = emoji
+
+        if icon is not MISSING:
+            payload["icon"] = _bytes_to_base64_data(icon)
 
         data = await self._state.http.edit_role(self.guild.id, self.id, reason=reason, **payload)
         return Role(guild=self.guild, data=data, state=self._state)

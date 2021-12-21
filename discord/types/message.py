@@ -53,6 +53,7 @@ class _AttachmentOptional(TypedDict, total=False):
     height: Optional[int]
     width: Optional[int]
     content_type: str
+    ephemeral: bool
     spoiler: bool
 
 
@@ -128,7 +129,7 @@ class Message(_MessageOptional):
     type: MessageType
 
 
-AllowedMentionType = Literal['roles', 'users', 'everyone']
+AllowedMentionType = Literal["roles", "users", "everyone"]
 
 
 class AllowedMentions(TypedDict):

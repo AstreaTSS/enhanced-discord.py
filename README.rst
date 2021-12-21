@@ -2,7 +2,7 @@ enhanced-discord.py
 ===================
 
 .. image:: https://discord.com/api/guilds/514232441498763279/embed.png
-   :target: https://discord.gg/PYAfZzpsjG
+   :target: https://discord.gg/TvqYBrGXEm
    :alt: Discord server invite
 .. image:: https://img.shields.io/pypi/v/enhanced-dpy.svg
    :target: https://pypi.python.org/pypi/enhanced-dpy
@@ -17,18 +17,6 @@ The Future of enhanced-discord.py
 --------------------------
 
 Enhanced discord.py is a fork of Rapptz's discord.py, that went unmaintained (`gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_)
-
-It is currently maintained by (in alphabetical order)
-
-- Chillymosh#8175
-- Daggy#9889
-- dank Had0cK#6081
-- Dutchy#6127
-- Eyesofcreeper#0001
-- Gnome!#6669
-- IAmTomahawkx#1000
-- Jadon#2494
-
 An overview of added features is available on the `custom features page <https://enhanced-dpy.readthedocs.io/en/latest/index.html#custom-features>`_.
 
 Key Features
@@ -117,5 +105,5 @@ Links
 ------
 
 - `Documentation <https://enhanced-dpy.readthedocs.io/en/latest/index.html>`_
-- `Official Discord Server <https://discord.gg/PYAfZzpsjG>`_
+- `Official Discord Server <https://discord.gg/TvqYBrGXEm>`_
 - `Discord API <https://discord.gg/discord-api>`_

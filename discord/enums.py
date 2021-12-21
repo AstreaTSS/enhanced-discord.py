@@ -27,41 +27,42 @@ from collections import namedtuple
 from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Type, TypeVar
 
 __all__ = (
-    'Enum',
-    'ChannelType',
-    'MessageType',
-    'VoiceRegion',
-    'SpeakingState',
-    'VerificationLevel',
-    'ContentFilter',
-    'Status',
-    'DefaultAvatar',
-    'AuditLogAction',
-    'AuditLogActionCategory',
-    'UserFlags',
-    'ActivityType',
-    'NotificationLevel',
-    'TeamMembershipState',
-    'WebhookType',
-    'ExpireBehaviour',
-    'ExpireBehavior',
-    'StickerType',
-    'StickerFormatType',
-    'InviteTarget',
-    'VideoQualityMode',
-    'ComponentType',
-    'ButtonStyle',
-    'StagePrivacyLevel',
-    'InteractionType',
-    'InteractionResponseType',
-    'NSFWLevel',
+    "Enum",
+    "ChannelType",
+    "MessageType",
+    "VoiceRegion",
+    "SpeakingState",
+    "VerificationLevel",
+    "ContentFilter",
+    "Status",
+    "DefaultAvatar",
+    "AuditLogAction",
+    "AuditLogActionCategory",
+    "UserFlags",
+    "ActivityType",
+    "NotificationLevel",
+    "TeamMembershipState",
+    "WebhookType",
+    "ExpireBehaviour",
+    "ExpireBehavior",
+    "StickerType",
+    "StickerFormatType",
+    "InviteTarget",
+    "VideoQualityMode",
+    "ComponentType",
+    "ButtonStyle",
+    "StagePrivacyLevel",
+    "InteractionType",
+    "InteractionResponseType",
+    "NSFWLevel",
+    "ProtocolURL",
 )
 
 
 def _create_value_cls(name, comparable):
-    cls = namedtuple('_EnumValue_' + name, 'name value')
-    cls.__repr__ = lambda self: f'<{name}.{self.name}: {self.value!r}>'
-    cls.__str__ = lambda self: f'{name}.{self.name}'
+    cls = namedtuple("_EnumValue_" + name, "name value")
+    cls.__repr__ = lambda self: f"<{name}.{self.name}: {self.value!r}>"
+    cls.__str__ = lambda self: f"{name}.{self.name}"
     if comparable:
         cls.__le__ = lambda self, other: isinstance(other, self.__class__) and self.value <= other.value
         cls.__ge__ = lambda self, other: isinstance(other, self.__class__) and self.value >= other.value
@@ -69,8 +70,9 @@ def _create_value_cls(name, comparable):
         cls.__gt__ = lambda self, other: isinstance(other, self.__class__) and self.value > other.value
     return cls
 
+
 def _is_descriptor(obj):
-    return hasattr(obj, '__get__') or hasattr(obj, '__set__') or hasattr(obj, '__delete__')
+    return hasattr(obj, "__get__") or hasattr(obj, "__set__") or hasattr(obj, "__delete__")
 
 
 class EnumMeta(type):
@@ -88,7 +90,7 @@ class EnumMeta(type):
         value_cls = _create_value_cls(name, comparable)
         for key, value in list(attrs.items()):
             is_descriptor = _is_descriptor(value)
-            if key[0] == '_' and not is_descriptor:
+            if key[0] == "_" and not is_descriptor:
                 continue
 
             # Special case classmethod to just pass through
@@ -110,10 +112,10 @@ class EnumMeta(type):
             member_mapping[key] = new_value
             attrs[key] = new_value
 
-        attrs['_enum_value_map_'] = value_mapping
-        attrs['_enum_member_map_'] = member_mapping
-        attrs['_enum_member_names_'] = member_names
-        attrs['_enum_value_cls_'] = value_cls
+        attrs["_enum_value_map_"] = value_mapping
+        attrs["_enum_member_map_"] = member_mapping
+        attrs["_enum_member_names_"] = member_names
+        attrs["_enum_value_cls_"] = value_cls
         actual_cls = super().__new__(cls, name, bases, attrs)
         value_cls._actual_enum_cls_ = actual_cls  # type: ignore
         return actual_cls
@@ -128,7 +130,7 @@ class EnumMeta(type):
         return len(cls._enum_member_names_)
 
     def __repr__(cls):
-        return f'<enum {cls.__name__}>'
+        return f"<enum {cls.__name__}>"
 
     @property
     def __members__(cls):
@@ -144,10 +146,10 @@ class EnumMeta(type):
         return cls._enum_member_map_[key]
 
     def __setattr__(cls, name, value):
-        raise TypeError('Enums are immutable.')
+        raise TypeError("Enums are immutable.")
 
     def __delattr__(cls, attr):
-        raise TypeError('Enums are immutable')
+        raise TypeError("Enums are immutable")
 
     def __instancecheck__(self, instance):
         # isinstance(x, Y)
@@ -215,29 +217,29 @@ class MessageType(Enum):
 
 
 class VoiceRegion(Enum):
-    us_west = 'us-west'
-    us_east = 'us-east'
-    us_south = 'us-south'
-    us_central = 'us-central'
-    eu_west = 'eu-west'
-    eu_central = 'eu-central'
-    singapore = 'singapore'
-    london = 'london'
-    sydney = 'sydney'
-    amsterdam = 'amsterdam'
-    frankfurt = 'frankfurt'
-    brazil = 'brazil'
-    hongkong = 'hongkong'
-    russia = 'russia'
-    japan = 'japan'
-    southafrica = 'southafrica'
-    south_korea = 'south-korea'
-    india = 'india'
-    europe = 'europe'
-    dubai = 'dubai'
-    vip_us_east = 'vip-us-east'
-    vip_us_west = 'vip-us-west'
-    vip_amsterdam = 'vip-amsterdam'
+    us_west = "us-west"
+    us_east = "us-east"
+    us_south = "us-south"
+    us_central = "us-central"
+    eu_west = "eu-west"
+    eu_central = "eu-central"
+    singapore = "singapore"
+    london = "london"
+    sydney = "sydney"
+    amsterdam = "amsterdam"
+    frankfurt = "frankfurt"
+    brazil = "brazil"
+    hongkong = "hongkong"
+    russia = "russia"
+    japan = "japan"
+    southafrica = "southafrica"
+    south_korea = "south-korea"
+    india = "india"
+    europe = "europe"
+    dubai = "dubai"
+    vip_us_east = "vip-us-east"
+    vip_us_west = "vip-us-west"
+    vip_amsterdam = "vip-amsterdam"
 
     def __str__(self):
         return self.value
@@ -277,12 +279,12 @@ class ContentFilter(Enum, comparable=True):
 
 
 class Status(Enum):
-    online = 'online'
-    offline = 'offline'
-    idle = 'idle'
-    dnd = 'dnd'
-    do_not_disturb = 'dnd'
-    invisible = 'invisible'
+    online = "online"
+    offline = "offline"
+    idle = "idle"
+    dnd = "dnd"
+    do_not_disturb = "dnd"
+    invisible = "invisible"
 
     def __str__(self):
         return self.value
@@ -415,33 +417,33 @@ class AuditLogAction(Enum):
     def target_type(self) -> Optional[str]:
         v = self.value
         if v == -1:
-            return 'all'
+            return "all"
         elif v < 10:
-            return 'guild'
+            return "guild"
         elif v < 20:
-            return 'channel'
+            return "channel"
         elif v < 30:
-            return 'user'
+            return "user"
         elif v < 40:
-            return 'role'
+            return "role"
         elif v < 50:
-            return 'invite'
+            return "invite"
         elif v < 60:
-            return 'webhook'
+            return "webhook"
         elif v < 70:
-            return 'emoji'
+            return "emoji"
         elif v == 73:
-            return 'channel'
+            return "channel"
         elif v < 80:
-            return 'message'
+            return "message"
         elif v < 83:
-            return 'integration'
+            return "integration"
         elif v < 90:
-            return 'stage_instance'
+            return "stage_instance"
         elif v < 93:
-            return 'sticker'
+            return "sticker"
         elif v < 113:
-            return 'thread'
+            return "thread"
 
 
 class UserFlags(Enum):
@@ -528,6 +530,7 @@ class InteractionType(Enum):
     ping = 1
     application_command = 2
     component = 3
+    application_command_autocomplete = 4
 
 
 class InteractionResponseType(Enum):
@@ -538,6 +541,7 @@ class InteractionResponseType(Enum):
     deferred_channel_message = 5  # (with source)
     deferred_message_update = 6  # for components
     message_update = 7  # for components
+    application_command_autocomplete_result = 8
 
 
 class VideoQualityMode(Enum):
@@ -589,12 +593,80 @@ class NSFWLevel(Enum, comparable=True):
     age_restricted = 3
 
 
-T = TypeVar('T')
+class ProtocolURL(Enum):
+
+    # General
+
+    home = "discord://-/channels/@me/"
+    nitro = "discord://-/store"
+    apps = "discord://-/apps"  # Breaks the client on windows (Shows download links for different OS)
+    guild_discovery = "discord://-/guild-discovery"
+    guild_create = "discord://-/guilds/create"
+    guild_invite = "discord://-/invite/{invite_code}"
+
+    # Settings
+
+    account_settings = "discord://-/settings/account"
+    profile_settings = "discord://-/settings/profile-customization"
+    privacy_settings = "discord://-/settings/privacy-and-safety"
+    safety_settings = "discord://-/settings/privacy-and-safety"  # Alias
+    authorized_apps_settings = "discord://-/settings/authorized-apps"
+    connections_settings = "discord://-/settings/connections"
+    nitro_settings = "discord://-/settings/premium"  # Same as store, but inside of settings
+    guild_premium_subscription = "discord://-/settings/premium-guild-subscription"
+    subscription_settings = "discord://-/settings/subscriptions"
+    gift_inventory_settings = "discord://-/settings/inventory"
+    billing_settings = "discord://-/settings/billing"
+    appearance_settings = "discord://-/settings/appearance"
+    accessibility_settings = "discord://-/settings/accessibility"
+    voice_video_settings = "discord://-/settings/voice"
+    text_images_settings = "discord://-/settings/text"
+    notifications_settings = "discord://-/settings/notifications"
+    keybinds_settings = "discord://-/settings/keybinds"
+    language_settings = "discord://-/settings/locale"
+    windows_settings = "discord://-/settings/windows"  # Doesnt work if used on wrong platform
+    linux_settings = "discord://-/settings/linux"  # Doesnt work if used on wrong platform
+    streamer_mode_settings = "discord://-/settings/streamer-mode"
+    advanced_settings = "discord://-/settings/advanced"
+    activity_status_settings = "discord://-/settings/activity-status"
+    game_overlay_settings = "discord://-/settings/overlay"
+    hypesquad_settings = "discord://-/settings/hypesquad-online"
+
+    changelogs = "discord://-/settings/changelogs"
+
+    # Doesn't work if you don't have it actually activated. Just blank screen.
+    experiments = "discord://-/settings/experiments"
+
+    developer_options = "discord://-/settings/developer-options"  # Same as experiments
+    hotspot_options = "discord://-/settings/hotspot-options"  # Same as experiments
+
+    # Users, Guilds, and DMs
+
+    user_profile = "discord://-/users/{user_id}"
+    dm_channel = "discord://-/channels/@me/{channel_id}"
+    dm_message = "discord://-/channels/@me/{channel_id}/{message_id}"
+    guild_channel = "discord://-/channels/{guild_id}/{channel_id}"
+    guild_message = "discord://-/channels/{guild_id}/{channel_id}/{message_id}"
+    guild_membership_screening = "discord://-/member-verification/{guild_id}"
+
+    # Library
+
+    games_library = "discord://-/library"
+    library_settings = "discord://-/library/settings"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def format(self, **kwargs: Any) -> str:
+        return self.value.format(**kwargs)
+
+
+T = TypeVar("T")
 
 
 def create_unknown_value(cls: Type[T], val: Any) -> T:
     value_cls = cls._enum_value_cls_  # type: ignore
-    name = f'unknown_{val}'
+    name = f"unknown_{val}"
     return value_cls(name=name, value=val)
 
 

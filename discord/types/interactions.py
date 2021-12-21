@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 ApplicationCommandType = Literal[1, 2, 3]
 
+
 class _ApplicationCommandOptional(TypedDict, total=False):
     options: List[ApplicationCommandOption]
     type: ApplicationCommandType
@@ -222,15 +223,12 @@ class MessageInteraction(TypedDict):
     user: User
 
 
-
-
-
 class _EditApplicationCommandOptional(TypedDict, total=False):
     description: str
     options: Optional[List[ApplicationCommandOption]]
     type: ApplicationCommandType
+    default_permission: bool
 
 
 class EditApplicationCommand(_EditApplicationCommandOptional):
     name: str
-    default_permission: bool

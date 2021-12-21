@@ -9,13 +9,13 @@ A basic wrapper for the Discord API.
 
 """
 
-__title__ = 'discord'
-__author__ = 'Rapptz'
-__license__ = 'MIT'
-__copyright__ = 'Copyright 2015-present Rapptz'
-__version__ = '2.0.0a'
+__title__ = "discord"
+__author__ = "Rapptz"
+__license__ = "MIT"
+__copyright__ = "Copyright 2015-present Rapptz"
+__version__ = "2.0.0a"
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+__path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
 import logging
 from typing import NamedTuple, Literal
@@ -40,7 +40,6 @@ from .colour import *
 from .integrations import *
 from .invite import *
 from .template import *
-from .welcome_screen import *
 from .widget import *
 from .object import *
 from .reaction import *
@@ -70,6 +69,6 @@ class VersionInfo(NamedTuple):
     serial: int
 
 
-version_info: VersionInfo = VersionInfo(major=2, minor=0, micro=0, releaselevel='alpha', serial=0)
+version_info: VersionInfo = VersionInfo(major=2, minor=0, micro=0, releaselevel="alpha", serial=0)
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

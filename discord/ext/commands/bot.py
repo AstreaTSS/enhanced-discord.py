@@ -28,44 +28,112 @@ from __future__ import annotations
 import asyncio
 import collections
 import collections.abc
+from functools import cached_property
+
 import inspect
 import importlib.util
 import sys
 import traceback
 import types
-from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, TypeVar, Type, Union
+from collections import defaultdict
+from discord.http import HTTPClient
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Tuple,
+    cast,
+    Mapping,
+    List,
+    Dict,
+    TYPE_CHECKING,
+    Optional,
+    TypeVar,
+    Type,
+    Union,
+)
 
 import discord
+from discord.types.interactions import (
+    ApplicationCommandInteractionData,
+    ApplicationCommandInteractionDataOption,
+    EditApplicationCommand,
+    _ApplicationCommandInteractionDataOptionString,
+)
 
 from .core import GroupMixin
-from .view import StringView
+from .converter import Greedy
+from .view import StringView, supported_quotes
 from .context import Context
+from .flags import FlagConverter
 from . import errors
 from .help import HelpCommand, DefaultHelpCommand
 from .cog import Cog
-from discord.utils import raise_expected_coro
 
 if TYPE_CHECKING:
     import importlib.machinery
 
+    from discord.role import Role
     from discord.message import Message
+    from discord.abc import PartialMessageableChannel
     from ._types import (
         Check,
         CoroFunc,
     )
 
 __all__ = (
-    'when_mentioned',
-    'when_mentioned_or',
-    'Bot',
-    'AutoShardedBot',
+    "when_mentioned",
+    "when_mentioned_or",
+    "Bot",
+    "AutoShardedBot",
 )
 
 MISSING: Any = discord.utils.MISSING
 
-T = TypeVar('T')
-CFT = TypeVar('CFT', bound='CoroFunc')
-CXT = TypeVar('CXT', bound='Context')
+T = TypeVar("T")
+CFT = TypeVar("CFT", bound="CoroFunc")
+CXT = TypeVar("CXT", bound="Context")
+
+
+class _FakeSlashMessage(discord.PartialMessage):
+    activity = application = edited_at = reference = webhook_id = None
+    attachments = components = reactions = stickers = []
+    tts = False
+
+    raw_mentions = discord.Message.raw_mentions
+    clean_content = discord.Message.clean_content
+    channel_mentions = discord.Message.channel_mentions
+    raw_role_mentions = discord.Message.raw_role_mentions
+    raw_channel_mentions = discord.Message.raw_channel_mentions
+
+    author: Union[discord.User, discord.Member]
+
+    @classmethod
+    def from_interaction(
+        cls, interaction: discord.Interaction, channel: Union[discord.TextChannel, discord.DMChannel, discord.Thread]
+    ):
+        self = cls(channel=channel, id=interaction.id)
+        assert interaction.user is not None
+        self.author = interaction.user
+
+        return self
+
+    @cached_property
+    def mentions(self) -> List[Union[discord.Member, discord.User]]:
+        client = self._state._get_client()
+        if self.guild:
+            ensure_user = lambda id: self.guild.get_member(id) or client.get_user(id)  # type: ignore
+        else:
+            ensure_user = client.get_user
+
+        return discord.utils._unique(filter(None, map(ensure_user, self.raw_mentions)))
+
+    @cached_property
+    def role_mentions(self) -> List[Role]:
+        if self.guild is None:
+            return []
+        return discord.utils._unique(filter(None, map(self.guild.get_role, self.raw_role_mentions)))
+
 
 def when_mentioned(bot: Union[Bot, AutoShardedBot], msg: Message) -> List[str]:
     """A callable that implements a command prefix equivalent to being mentioned.
@@ -73,7 +141,8 @@ def when_mentioned(bot: Union[Bot, AutoShardedBot], msg: Message) -> List[str]:
     These are meant to be passed into the :attr:`.Bot.command_prefix` attribute.
     """
     # bot.user will never be None when this is called
-    return [f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']  # type: ignore
+    return [f"<@{bot.user.id}> ", f"<@!{bot.user.id}> "]  # type: ignore
+
 
 def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], Message], List[str]]:
     """A callable that implements when mentioned or other prefixes provided.
@@ -104,6 +173,7 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], M
     ----------
     :func:`.when_mentioned`
     """
+
     def inner(bot, msg):
         r = list(prefixes)
         r = when_mentioned(bot, msg) + r
@@ -111,19 +181,66 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], M
 
     return inner
 
+
 def _is_submodule(parent: str, child: str) -> bool:
     return parent == child or child.startswith(parent + ".")
 
+
+def _unwrap_slash_groups(
+    data: ApplicationCommandInteractionData,
+) -> Tuple[str, Dict[str, ApplicationCommandInteractionDataOption]]:
+    command_name = data["name"]
+    command_options: Any = data.get("options") or []
+    while True:
+        try:
+            option = next(o for o in command_options if o["type"] in {1, 2})
+        except StopIteration:
+            return command_name, {o["name"]: o for o in command_options}
+        else:
+            command_name += f' {option["name"]}'
+            command_options = option.get("options") or []
+
+
+def _quote_string_safe(string: str) -> str:
+    # we need to quote this string otherwise we may spill into
+    # other parameters and cause all kinds of trouble, as many
+    # quotes are supported and some may be in the option, we
+    # loop through all supported quotes and if neither open or
+    # close are in the string, we add them
+    for open, close in supported_quotes.items():
+        if open not in string and close not in string:
+            return f"{open}{string}{close}"
+
+    # all supported quotes are in the message and we cannot add any
+    # safely, very unlikely but still got to be covered
+    raise errors.UnexpectedQuoteError(string)
+
+
 class _DefaultRepr:
     def __repr__(self):
-        return '<default-help-command>'
+        return "<default-help-command>"
+
 
 _default = _DefaultRepr()
 
+
 class BotBase(GroupMixin):
-    def __init__(self, command_prefix, help_command=_default, description=None, *, intents: discord.Intents, **options):
+    def __init__(
+        self,
+        command_prefix,
+        help_command=_default,
+        description=None,
+        *,
+        intents: discord.Intents,
+        message_commands: bool = True,
+        slash_commands: bool = False,
+        **options,
+    ):
         super().__init__(**options, intents=intents)
+
         self.command_prefix = command_prefix
+        self.slash_commands = slash_commands
+        self.message_commands = message_commands
         self.extra_events: Dict[str, List[CoroFunc]] = {}
         self.__cogs: Dict[str, Cog] = {}
         self.__extensions: Dict[str, types.ModuleType] = {}
@@ -132,16 +249,20 @@ class BotBase(GroupMixin):
         self._before_invoke = None
         self._after_invoke = None
         self._help_command = None
-        self.description = inspect.cleandoc(description) if description else ''
-        self.owner_id = options.get('owner_id')
-        self.owner_ids = options.get('owner_ids', set())
-        self.strip_after_prefix = options.get('strip_after_prefix', False)
+        self.description = inspect.cleandoc(description) if description else ""
+        self.owner_id = options.get("owner_id")
+        self.owner_ids = options.get("owner_ids", set())
+        self.strip_after_prefix = options.get("strip_after_prefix", False)
+        self.slash_command_guilds: Optional[Iterable[int]] = options.get("slash_command_guilds", None)
 
         if self.owner_id and self.owner_ids:
-            raise TypeError('Both owner_id and owner_ids are set.')
+            raise TypeError("Both owner_id and owner_ids are set.")
 
         if self.owner_ids and not isinstance(self.owner_ids, collections.abc.Collection):
-            raise TypeError(f'owner_ids must be a collection not {self.owner_ids.__class__!r}')
+            raise TypeError(f"owner_ids must be a collection not {self.owner_ids.__class__!r}")
+
+        if not (message_commands or slash_commands):
+            raise ValueError("Both message_commands and slash_commands are disabled.")
 
         if help_command is _default:
             self.help_command = DefaultHelpCommand()
@@ -153,9 +274,58 @@ class BotBase(GroupMixin):
     def dispatch(self, event_name: str, *args: Any, **kwargs: Any) -> None:
         # super() will resolve to Client
         super().dispatch(event_name, *args, **kwargs)  # type: ignore
-        ev = 'on_' + event_name
+        ev = "on_" + event_name
         for event in self.extra_events.get(ev, []):
             self._schedule_event(event, ev, *args, **kwargs)  # type: ignore
+
+    async def setup(self):
+        await self.create_slash_commands()
+
+    async def create_slash_commands(self):
+        commands: defaultdict[Optional[int], List[EditApplicationCommand]] = defaultdict(list)
+        for command in self.commands:
+            if command.hidden or (command.slash_command is None and not self.slash_commands):
+                continue
+
+            try:
+                payload = command.to_application_command()
+            except Exception:
+                raise errors.ApplicationCommandRegistrationError(command)
+
+            if payload is None:
+                continue
+
+            guilds = command.slash_command_guilds or self.slash_command_guilds
+            if guilds is None:
+                commands[None].append(payload)
+            else:
+                for guild in guilds:
+                    commands[guild].append(payload)
+
+        http: HTTPClient = self.http  # type: ignore
+        global_commands = commands.pop(None, None)
+        application_id = self.application_id or (await self.application_info()).id  # type: ignore
+        if global_commands is not None:
+            if self.slash_command_guilds is None:
+                await http.bulk_upsert_global_commands(
+                    payload=global_commands,
+                    application_id=application_id,
+                )
+            else:
+                for guild in self.slash_command_guilds:
+                    await http.bulk_upsert_guild_commands(
+                        guild_id=guild,
+                        payload=global_commands,
+                        application_id=application_id,
+                    )
+
+        for guild, guild_commands in commands.items():
+            assert guild is not None
+            await http.bulk_upsert_guild_commands(
+                guild_id=guild,
+                payload=guild_commands,
+                application_id=application_id,
+            )
 
     @discord.utils.copy_doc(discord.Client.close)
     async def close(self) -> None:
@@ -183,7 +353,7 @@ class BotBase(GroupMixin):
 
         This only fires if you do not specify any listeners for command error.
         """
-        if self.extra_events.get('on_command_error', None):
+        if self.extra_events.get("on_command_error", None):
             return
 
         command = context.command
@@ -194,7 +364,7 @@ class BotBase(GroupMixin):
         if cog and cog.has_error_handler():
             return
 
-        print(f'Ignoring exception in command {context.command}:', file=sys.stderr)
+        print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
         traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
     # global check registration
@@ -425,9 +595,11 @@ class BotBase(GroupMixin):
         TypeError
             The coroutine passed is not actually a coroutine.
         """
-        return raise_expected_coro(
-            coro, 'The pre-invoke hook must be a coroutine.'
-        )
+        if not asyncio.iscoroutinefunction(coro):
+            raise TypeError("The pre-invoke hook must be a coroutine.")
+
+        self._before_invoke = coro
+        return coro
 
     def after_invoke(self, coro: CFT) -> CFT:
         r"""A decorator that registers a coroutine as a post-invoke hook.
@@ -456,10 +628,11 @@ class BotBase(GroupMixin):
         TypeError
             The coroutine passed is not actually a coroutine.
         """
-        return raise_expected_coro(
-            coro, 'The post-invoke hook must be a coroutine.'
-        )
+        if not asyncio.iscoroutinefunction(coro):
+            raise TypeError("The post-invoke hook must be a coroutine.")
 
+        self._after_invoke = coro
+        return coro
 
     # listener registration
 
@@ -488,7 +661,7 @@ class BotBase(GroupMixin):
         name = func.__name__ if name is MISSING else name
 
         if not asyncio.iscoroutinefunction(func):
-            raise TypeError('Listeners must be coroutines')
+            raise TypeError("Listeners must be coroutines")
 
         if name in self.extra_events:
             self.extra_events[name].append(func)
@@ -584,14 +757,14 @@ class BotBase(GroupMixin):
         """
 
         if not isinstance(cog, Cog):
-            raise TypeError('cogs must derive from Cog')
+            raise TypeError("cogs must derive from Cog")
 
         cog_name = cog.__cog_name__
         existing = self.__cogs.get(cog_name)
 
         if existing is not None:
             if not override:
-                raise discord.ClientException(f'Cog named {cog_name!r} already loaded')
+                raise discord.ClientException(f"Cog named {cog_name!r} already loaded")
             self.remove_cog(cog_name)
 
         cog = cog._inject(self)
@@ -679,7 +852,7 @@ class BotBase(GroupMixin):
 
     def _call_module_finalizers(self, lib: types.ModuleType, key: str) -> None:
         try:
-            func = getattr(lib, 'teardown')
+            func = getattr(lib, "teardown")
         except AttributeError:
             pass
         else:
@@ -706,7 +879,7 @@ class BotBase(GroupMixin):
             raise errors.ExtensionFailed(key, e) from e
 
         try:
-            setup = getattr(lib, 'setup')
+            setup = getattr(lib, "setup")
         except AttributeError:
             del sys.modules[key]
             raise errors.NoEntryPointError(key)
@@ -856,11 +1029,7 @@ class BotBase(GroupMixin):
             raise errors.ExtensionNotLoaded(name)
 
         # get the previous module states from sys modules
-        modules = {
-            name: module
-            for name, module in sys.modules.items()
-            if _is_submodule(lib.__name__, name)
-        }
+        modules = {name: module for name, module in sys.modules.items() if _is_submodule(lib.__name__, name)}
 
         try:
             # Unload and then load the module...
@@ -893,7 +1062,7 @@ class BotBase(GroupMixin):
     def help_command(self, value: Optional[HelpCommand]) -> None:
         if value is not None:
             if not isinstance(value, HelpCommand):
-                raise TypeError('help_command must be a subclass of HelpCommand')
+                raise TypeError("help_command must be a subclass of HelpCommand")
             if self._help_command is not None:
                 self._help_command._remove_from_bot(self)
             self._help_command = value
@@ -923,6 +1092,9 @@ class BotBase(GroupMixin):
             A list of prefixes or a single prefix that the bot is
             listening for.
         """
+        if isinstance(message, _FakeSlashMessage):
+            return "/"
+
         prefix = ret = self.command_prefix
         if callable(prefix):
             ret = await discord.utils.maybe_coroutine(prefix, self, message)
@@ -936,8 +1108,10 @@ class BotBase(GroupMixin):
                 if isinstance(ret, collections.abc.Iterable):
                     raise
 
-                raise TypeError("command_prefix must be plain string, iterable of strings, or callable "
-                                f"returning either of these, not {ret.__class__.__name__}")
+                raise TypeError(
+                    "command_prefix must be plain string, iterable of strings, or callable "
+                    f"returning either of these, not {ret.__class__.__name__}"
+                )
 
             if not ret:
                 raise ValueError("Iterable command_prefix must contain at least one prefix")
@@ -997,14 +1171,18 @@ class BotBase(GroupMixin):
 
             except TypeError:
                 if not isinstance(prefix, list):
-                    raise TypeError("get_prefix must return either a string or a list of string, "
-                                    f"not {prefix.__class__.__name__}")
+                    raise TypeError(
+                        "get_prefix must return either a string or a list of string, "
+                        f"not {prefix.__class__.__name__}"
+                    )
 
                 # It's possible a bad command_prefix got us here.
                 for value in prefix:
                     if not isinstance(value, str):
-                        raise TypeError("Iterable command_prefix or list returned from get_prefix must "
-                                        f"contain only strings, not {value.__class__.__name__}")
+                        raise TypeError(
+                            "Iterable command_prefix or list returned from get_prefix must "
+                            f"contain only strings, not {value.__class__.__name__}"
+                        )
 
                 # Getting here shouldn't happen
                 raise
@@ -1031,19 +1209,19 @@ class BotBase(GroupMixin):
             The invocation context to invoke.
         """
         if ctx.command is not None:
-            self.dispatch('command', ctx)
+            self.dispatch("command", ctx)
             try:
                 if await self.can_run(ctx, call_once=True):
                     await ctx.command.invoke(ctx)
                 else:
-                    raise errors.CheckFailure('The global check once functions failed.')
+                    raise errors.CheckFailure("The global check once functions failed.")
             except errors.CommandError as exc:
                 await ctx.command.dispatch_error(ctx, exc)
             else:
-                self.dispatch('command_completion', ctx)
+                self.dispatch("command_completion", ctx)
         elif ctx.invoked_with:
             exc = errors.CommandNotFound(f'Command "{ctx.invoked_with}" is not found')
-            self.dispatch('command_error', ctx, exc)
+            self.dispatch("command_error", ctx, exc)
 
     async def process_commands(self, message: Message) -> None:
         """|coro|
@@ -1073,8 +1251,94 @@ class BotBase(GroupMixin):
         ctx = await self.get_context(message)
         await self.invoke(ctx)
 
+    async def process_slash_commands(self, interaction: discord.Interaction):
+        """|coro|
+
+        This function processes a slash command interaction into a usable
+        message and calls :meth:`.process_commands` based on it. Without this
+        coroutine slash commands will not be triggered.
+
+        By default, this coroutine is called inside the :func:`.on_interaction`
+        event. If you choose to override the :func:`.on_interaction` event,
+        then you should invoke this coroutine as well.
+
+        .. versionadded:: 2.0
+
+        Parameters
+        -----------
+        interaction: :class:`discord.Interaction`
+            The interaction to process slash commands for.
+
+        """
+        if interaction.type != discord.InteractionType.application_command:
+            return
+
+        interaction.data = cast(ApplicationCommandInteractionData, interaction.data)
+        command_name, command_options = _unwrap_slash_groups(interaction.data)
+
+        command = self.get_command(command_name)
+        if command is None:
+            raise errors.CommandNotFound(f'Command "{command_name}" is not found')
+
+        # Ensure the interaction channel is usable
+        channel = interaction.channel
+        if channel is None or isinstance(channel, discord.PartialMessageable):
+            if interaction.guild is None:
+                assert interaction.user is not None
+                channel = await interaction.user.create_dm()
+            elif interaction.channel_id is not None:
+                channel = await interaction.guild.fetch_channel(interaction.channel_id)
+            else:
+                return  # cannot do anything without stable channel
+
+        # Make our fake message so we can pass it to ext.commands
+        message: discord.Message = _FakeSlashMessage.from_interaction(interaction, channel)  # type: ignore
+        message.content = f"/{command_name}"
+
+        # Add arguments to fake message content, in the right order
+        ignore_params: List[inspect.Parameter] = []
+        for name, param in command.clean_params.items():
+            if inspect.isclass(param.annotation) and issubclass(param.annotation, FlagConverter):
+                for name, flag in param.annotation.get_flags().items():
+                    option = command_options.get(name)
+
+                    if option is None:
+                        if flag.required:
+                            raise errors.MissingRequiredFlag(flag)
+                    else:
+                        prefix = param.annotation.__commands_flag_prefix__
+                        delimiter = param.annotation.__commands_flag_delimiter__
+                        message.content += f" {prefix}{name}{delimiter}{option['value']}"  # type: ignore
+                continue
+
+            option = command_options.get(name)
+            if option is None:
+                if param.default is param.empty and not command._is_typing_optional(param.annotation):
+                    raise errors.MissingRequiredArgument(param)
+                else:
+                    ignore_params.append(param)
+            elif (
+                option["type"] == 3
+                and not isinstance(param.annotation, Greedy)
+                and param.kind in {param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY}
+            ):
+                # String with space in without "consume rest"
+                option = cast(_ApplicationCommandInteractionDataOptionString, option)
+                message.content += f" {_quote_string_safe(option['value'])}"
+            else:
+                message.content += f' {option.get("value", "")}'
+
+        ctx = await self.get_context(message)
+        ctx._ignored_params = ignore_params
+        ctx.interaction = interaction
+        await self.invoke(ctx)
+
     async def on_message(self, message):
         await self.process_commands(message)
+
+    async def on_interaction(self, interaction: discord.Interaction):
+        await self.process_slash_commands(interaction)
+
 
 class Bot(BotBase, discord.Client):
     """Represents a discord bot.
@@ -1145,11 +1409,36 @@ class Bot(BotBase, discord.Client):
         the ``command_prefix`` is set to ``!``. Defaults to ``False``.
 
         .. versionadded:: 1.7
+    message_commands: Optional[:class:`bool`]
+        Whether to process commands based on messages.
+
+        Can be overwritten per command in the command decorators or when making
+        a :class:`Command` object via the ``message_command`` parameter
+
+        .. versionadded:: 2.0
+    slash_commands: Optional[:class:`bool`]
+        Whether to upload and process slash commands.
+
+        Can be overwritten per command in the command decorators or when making
+        a :class:`Command` object via the ``slash_command`` parameter
+
+        .. versionadded:: 2.0
+    slash_command_guilds: Optional[:class:`List[int]`]
+        If this is set, only upload slash commands to these guild IDs.
+
+        Can be overwritten per command in the command decorators or when making
+        a :class:`Command` object via the ``slash_command_guilds`` parameter
+
+        .. versionadded:: 2.0
+
     """
+
     pass
+
 
 class AutoShardedBot(BotBase, discord.AutoShardedClient):
     """This is similar to :class:`.Bot` except that it is inherited from
     :class:`discord.AutoShardedClient` instead.
     """
+
     pass
