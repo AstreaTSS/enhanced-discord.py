@@ -764,7 +764,7 @@ class Guild(Hashable):
 
         This works by checking if :attr:`Member.timeout_until` is not ``None``.
         """
-        return [member for member in self.members if member.timeout_until is not None]
+        return [member for member in self.members if member.timed_out]
 
     @property
     def humans(self) -> List[Member]:

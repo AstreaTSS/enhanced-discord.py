@@ -370,6 +370,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.activities = member.activities
         self._state = member._state
         self._avatar = member._avatar
+        self.timeout_until = member.timeout_until
 
         # Reference will not be copied unless necessary by PRESENCE_UPDATE
         # See below
@@ -625,6 +626,14 @@ class Member(discord.abc.Messageable, _UserTag):
     def voice(self) -> Optional[VoiceState]:
         """Optional[:class:`VoiceState`]: Returns the member's current voice state."""
         return self.guild._voice_state_for(self._user.id)
+
+    @property
+    def timed_out(self) -> bool:
+        """:class:`bool`: Returns whether the member is timed out.
+
+        .. versionadded:: 2.0
+        """
+        return self.timeout_until is not None and self.timeout_until > utils.utcnow()
 
     async def ban(
         self,
