@@ -434,6 +434,8 @@ class CommandState:
                 self._application_id, t  # type: ignore
             )
             for x in payload:  # type: ApplicationCommand
+                if (x["name"], x["type"]) not in store:
+                    continue  # This is an ext command
                 self.command_store[int(x["id"])] = t = store[(x["name"], x["type"])]
                 t._id_ = int(x["id"])
 
