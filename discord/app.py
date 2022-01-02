@@ -512,7 +512,6 @@ class CommandState:
                 self.pre_registration[int(x)].append(command)
 
     async def dispatch(self, client: Client, interaction: Interaction) -> None:
-        print(json.dumps(interaction.data, indent=4))
         cls = self.command_store.get(int(interaction.data["id"]))
         if cls is None:
             return
@@ -558,7 +557,6 @@ class CommandState:
     async def _dispatch_autocomplete(self, inst: CommandT, data: List[ApplicationCommandInteractionDataOption]):
         options: Dict[str, Optional[Union[str, int, float]]] = {x.name: None for x in inst._arguments_}
         focused = None
-        print(data)
 
         for x in data:
             val = x["value"]
