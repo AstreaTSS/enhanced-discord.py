@@ -452,7 +452,6 @@ class Client:
         An event that handles the dispatching of application commands.
         See :func:`~discord.on_interaction` for more information.
         """
-        print(interaction.type)
         if interaction.type in {InteractionType.application_command, InteractionType.application_command_autocomplete}:
             await self._application_command_store.dispatch(self, interaction)
 
