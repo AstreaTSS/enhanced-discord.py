@@ -415,21 +415,46 @@ class CommandState:
         self.command_store: Dict[int, Type[Command]] = {}  # not using Snowflake to keep one type
         self.pre_registration: Dict[Optional[int], List[Type[Command]]] = {}  # the None key will hold global commands
 
-    async def upload_global_commands(self) -> None:
+    async def upload_guild_commands(
+        self,
+        ext_commands: Dict[int | None, Any],
+        guild: Optional[Snowflake] = None,
+    ) -> None:
         """
-        This function will upload all *global* Application Commands to discord, overwriting previous ones.
+        This function will upload all *guild* slash commands to discord, overwriting the previous ones.
+        Note: this can be fairly slow, as it involves an api call for every guild you have set slash commands for
         """
+        # ext_commands is a dict of guild_id -> command payloads
+
         if not self._application_id:
             appinfo = await self.http.application_info()
             self._application_id = appinfo["id"]
 
-        global_commands = self.pre_registration.get(None, [])
-        if global_commands:
-            store = {(x._name_, x.type().value): x for x in global_commands}  # type: ignore
-            payload: List[ApplicationCommand] = await self.http.bulk_upsert_global_commands(
-                self._application_id, [x.to_dict() for x in global_commands if not x._parent_]  # type: ignore
+        targets: Iterable[Tuple[Optional[Snowflake], List[Type[Command]]]]
+
+        if guild:
+            if int(guild) not in self.pre_registration:
+                raise ValueError(f"guild {guild} has no slash commands set")
+
+            targets = ((guild, self.pre_registration[int(guild)]),)
+
+        else:
+            targets = self.pre_registration.items()  # type: ignore
+
+        for (guild, commands) in targets:
+            if guild is None:
+                continue  # global commands
+
+            store = {(x._name_, x.type().value): x for x in commands}  # type: ignore
+            t = [x.to_dict() for x in commands if not x._parent_]  # All tom's commands for a specific guild
+            if guild in ext_commands:
+                t.extend(ext_commands[guild])  # All ext commands for a specific guild
+            payload: List[ApplicationCommand] = await self.http.bulk_upsert_guild_commands(
+                self._application_id, guild, t
             )
-            for x in payload:  # type: ApplicationCommand
+            for x in payload:
+                if (x["name"], x["type"]) not in store:
+                    continue  # This is an ext command
                 self.command_store[int(x["id"])] = t = store[(x["name"], x["type"])]
                 t._id_ = int(x["id"])
 
